@@ -30,9 +30,18 @@ def main():
     parser = argparse.ArgumentParser(description="IEM Recommendation Engine - Semantic Search MVP")
     parser.add_argument("query", type=str, help="Free-text query for the tonal description you want")
     parser.add_argument("--top_k", type=int, default=3, help="Number of results to return")
+    parser.add_argument("--alpha", type=float, default=0.5, help="Blend weight for semantic search (0.0 to 1.0)")
     args = parser.parse_args()
 
     print(f"✅ [Parsed query: '{args.query}']")
+
+    # 1. Infer acoustic profile from text
+    from infer import infer_target_profile
+    from features import to_vector
+    inferred_features = infer_target_profile(args.query)
+    inferred_vector = to_vector(inferred_features)
+    print(f"✅ [Inferred acoustic target vector from query]")
+    print(f"   Inferred features: {inferred_features}")
 
     target = load_fr_csv(TARGET_PATH, name="Harman in-ear 2019")
     grid = standard_grid()
@@ -46,6 +55,7 @@ def main():
 
     iems = []
     descriptions = []
+    corpus_vectors_list = []
 
     for path in iem_paths:
         iem = load_fr_csv(path)
@@ -56,20 +66,35 @@ def main():
         
         iems.append((iem.name, feats))
         descriptions.append(desc)
+        corpus_vectors_list.append(to_vector(feats))
 
     print(f"✅ [Extracted features and generated descriptions for corpus]")
+
+    import numpy as np
+    corpus_vectors = np.array(corpus_vectors_list)
 
     # Embed corpus
     corpus_embeddings = embed_texts(descriptions)
     print(f"✅ [Embedded corpus descriptions]")
 
-    # Search
-    results = semantic_search(args.query, descriptions, corpus_embeddings, top_k=args.top_k)
-    print(f"✅ [Computed similarity scores]")
+    # Hybrid Search
+    from search import hybrid_search
+    results = hybrid_search(
+        query=args.query,
+        inferred_profile=inferred_vector,
+        corpus_texts=descriptions,
+        corpus_embeddings=corpus_embeddings,
+        corpus_vectors=corpus_vectors,
+        alpha=args.alpha,
+        top_k=args.top_k
+    )
+    
+    print(f"✅ [Computed hybrid similarity scores (alpha={args.alpha})]")
     print("\n--- Search Results ---")
-    for rank, (idx, score, desc) in enumerate(results, 1):
+    for rank, (idx, score, sem_score, ac_score, desc) in enumerate(results, 1):
         iem_name = os.path.basename(iems[idx][0]).replace(".csv", "")
-        print(f"{rank}. {iem_name} (Score: {score:.3f})")
+        print(f"{rank}. {iem_name}")
+        print(f"   Overall Score: {score:.3f} (Semantic: {sem_score:.3f}, Acoustic: {ac_score:.3f})")
         print(f"   {desc}")
         print()
 

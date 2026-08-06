@@ -35,3 +35,43 @@ def semantic_search(query: str, corpus_texts: list[str], corpus_embeddings: np.n
         results.append((int(idx), float(similarities[idx]), corpus_texts[idx]))
         
     return results
+
+def acoustic_similarity(inferred_vector: np.ndarray, corpus_vectors: np.ndarray) -> np.ndarray:
+    """Compute an acoustic similarity score in [0, 1] using Euclidean distance."""
+    # Distance shape: (N,)
+    distances = np.linalg.norm(corpus_vectors - inferred_vector, axis=1)
+    # Convert distance to similarity
+    return 1.0 / (1.0 + distances)
+
+def hybrid_search(query: str, inferred_profile: np.ndarray, corpus_texts: list[str], 
+                  corpus_embeddings: np.ndarray, corpus_vectors: np.ndarray, 
+                  alpha: float = 0.5, top_k: int = 3):
+    """
+    Perform a hybrid search using both semantic text similarity and acoustic feature similarity.
+    alpha: Weight for semantic similarity. (1 - alpha) is for acoustic similarity.
+    Returns: list of tuples (index, final_score, semantic_score, acoustic_score, text)
+    """
+    query_emb = embed_texts([query])[0]
+    
+    sem_sims = cosine_similarity(query_emb, corpus_embeddings)
+    ac_sims = acoustic_similarity(inferred_profile, corpus_vectors)
+    
+    # Normalize semantic similarities which can be in [-1, 1] loosely to [0, 1]
+    # Though MiniLM embeddings usually yield cosine sim in [0, 1] for most text.
+    sem_sims_norm = np.clip(sem_sims, 0, 1)
+    
+    final_scores = alpha * sem_sims_norm + (1.0 - alpha) * ac_sims
+    
+    top_indices = np.argsort(final_scores)[::-1][:top_k]
+    
+    results = []
+    for idx in top_indices:
+        results.append((
+            int(idx), 
+            float(final_scores[idx]), 
+            float(sem_sims[idx]), 
+            float(ac_sims[idx]), 
+            corpus_texts[idx]
+        ))
+        
+    return results
