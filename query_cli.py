@@ -79,6 +79,8 @@ def main():
 
     # Hybrid Search
     from search import hybrid_search
+    from explain import get_top_contributors
+
     results = hybrid_search(
         query=args.query,
         inferred_profile=inferred_vector,
@@ -93,8 +95,12 @@ def main():
     print("\n--- Search Results ---")
     for rank, (idx, score, sem_score, ac_score, desc) in enumerate(results, 1):
         iem_name = os.path.basename(iems[idx][0]).replace(".csv", "")
+        iem_features = iems[idx][1]
+        contributors = get_top_contributors(iem_features, inferred_features)
+        
         print(f"{rank}. {iem_name}")
         print(f"   Overall Score: {score:.3f} (Semantic: {sem_score:.3f}, Acoustic: {ac_score:.3f})")
+        print(f"   Matched primarily on: {', '.join(contributors)}")
         print(f"   {desc}")
         print()
 
