@@ -21,10 +21,11 @@ You are working on **AcousticSearch**, an AI-powered In-Ear Monitor (IEM) Recomm
 - When starting the Astro dev server, ensure `astro@^5.0.0` and `tailwindcss@^3.4.0` are strictly maintained in `package.json` to prevent local node module resolution issues on Windows.
 - Always use environment variables for `SUPABASE_URL`, `SUPABASE_KEY`, and `GEMINI_API_KEY`. Never hardcode them.
 
-## Important Files
-- `server.py`: The FastAPI backend entrypoint.
-- `search.py`: The hybrid vector re-ranking logic.
-- `infer.py`: The Gemini API parsing logic that extracts target acoustic features from user intent.
-- `features.py`: The math that calculates sibilance risk and tonal tilt from FR deviations.
-- `frontend/src/components/SearchApp.jsx`: The main client-side React island.
-- `frontend/src/components/MiniChart.jsx`: The SVG visualization of the IEM tuning frequency.
+## Key Files Summary
+- `server.py`: FastAPI server entrypoint.
+- `search.py`: Hybrid reranking math.
+- `infer.py`: Gemini target profile extraction with model fallback.
+- `features.py` & `normalize.py`: Frequency curve interpolation and feature metrics.
+- `frontend/src/components/SearchApp.jsx`: Main search UI, quick chips & "Suggest More" pagination.
+- `frontend/src/components/ResultCard.jsx`: Recommendation card layout.
+- `frontend/src/components/MiniChart.jsx`: Professional SVG audio FR graph.
