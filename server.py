@@ -68,7 +68,7 @@ def startup_event():
     print("Local fallback data loaded.")
 
 @app.get("/search")
-def search_api(q: str = Query(...), alpha: float = Query(0.5)):
+def search_api(q: str = Query(...), alpha: float = Query(0.5), top_k: int = Query(6)):
     # Infer features
     inferred_features = infer_target_profile(q)
     inferred_vector = to_vector(inferred_features)
@@ -115,7 +115,7 @@ def search_api(q: str = Query(...), alpha: float = Query(0.5)):
         corpus_embeddings=search_corpus_embeddings,
         corpus_vectors=search_corpus_vectors,
         alpha=alpha,
-        top_k=3
+        top_k=top_k
     )
     
     output = []
