@@ -1,0 +1,137 @@
+"""
+server.py
+
+FastAPI server that exposes a `/search` endpoint to the frontend.
+"""
+
+import glob
+import os
+import sys
+import numpy as np
+
+from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
+
+from describe import describe
+from features import extract_features, to_vector
+from normalize import deviation_from_target, load_fr_csv, standard_grid
+from embed import embed_texts
+from infer import infer_target_profile
+from search import hybrid_search
+from explain import get_top_contributors
+
+app = FastAPI(title="IEM Recommendation Engine API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # For local dev
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+TARGET_PATH = os.path.join(HERE, "sample_data", "targets", "Harman in-ear 2019.csv")
+IEM_DIR = os.path.join(HERE, "sample_data", "in-ear")
+
+# Keep everything loaded in memory for the fallback path
+target = None
+grid = None
+iems = []
+descriptions = []
+corpus_vectors = None
+corpus_embeddings = None
+
+@app.on_event("startup")
+def startup_event():
+    global target, grid, iems, descriptions, corpus_vectors, corpus_embeddings
+    print("Loading local fallback data...")
+    target = load_fr_csv(TARGET_PATH, name="Harman in-ear 2019")
+    grid = standard_grid()
+    
+    iem_paths = sorted(glob.glob(os.path.join(IEM_DIR, "*.csv")))
+    
+    corpus_vectors_list = []
+    
+    for path in iem_paths:
+        iem = load_fr_csv(path)
+        freq, deviation = deviation_from_target(iem, target, grid_hz=grid)
+        feats = extract_features(freq, deviation)
+        iem_name_clean = os.path.basename(path).replace(".csv", "")
+        desc = describe(feats, iem_name=iem_name_clean)
+        
+        iems.append((iem.name, feats))
+        descriptions.append(desc)
+        corpus_vectors_list.append(to_vector(feats))
+        
+    corpus_vectors = np.array(corpus_vectors_list)
+    corpus_embeddings = embed_texts(descriptions)
+    print("Local fallback data loaded.")
+
+@app.get("/search")
+def search_api(q: str = Query(...), alpha: float = Query(0.5)):
+    # Infer features
+    inferred_features = infer_target_profile(q)
+    inferred_vector = to_vector(inferred_features)
+    
+    # Try Supabase first
+    use_supabase = os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_KEY")
+    
+    # Setup variables for search
+    search_iems_data = iems
+    search_descriptions = descriptions
+    search_corpus_vectors = corpus_vectors
+    search_corpus_embeddings = corpus_embeddings
+    
+    if use_supabase:
+        try:
+            from db import get_client, search_iems
+            client = get_client()
+            query_emb = embed_texts([q])[0]
+            db_results = search_iems(client, query_emb, top_k=20)
+            
+            # Reconstruct for hybrid search
+            search_iems_data = []
+            search_descriptions = []
+            corpus_vectors_list = []
+            for res in db_results:
+                search_iems_data.append((res['name'], res['features']))
+                search_descriptions.append(res['description'])
+                corpus_vectors_list.append(to_vector(res['features']))
+            
+            search_corpus_vectors = np.array(corpus_vectors_list)
+            search_corpus_embeddings = embed_texts(search_descriptions)
+        except Exception as e:
+            print(f"Supabase query failed, using local fallback. Error: {e}")
+    
+    results = hybrid_search(
+        query=q,
+        inferred_profile=inferred_vector,
+        corpus_texts=search_descriptions,
+        corpus_embeddings=search_corpus_embeddings,
+        corpus_vectors=search_corpus_vectors,
+        alpha=alpha,
+        top_k=3
+    )
+    
+    output = []
+    for rank, (idx, score, sem_score, ac_score, desc) in enumerate(results, 1):
+        iem_name = search_iems_data[idx][0]
+        iem_features = search_iems_data[idx][1]
+        contributors = get_top_contributors(iem_features, inferred_features)
+        
+        output.append({
+            "name": iem_name,
+            "description": desc,
+            "score": round(score, 3),
+            "semantic_score": round(sem_score, 3),
+            "acoustic_score": round(ac_score, 3),
+            "contributors": contributors,
+            "features": iem_features,
+            "target_features": inferred_features
+        })
+        
+    return {"results": output, "inferred_features": inferred_features}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
