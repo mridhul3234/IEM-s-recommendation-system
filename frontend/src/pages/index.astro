@@ -1,17 +1,23 @@
 ---
-
+import SearchApp from '../components/SearchApp';
+import '../styles/global.css';
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<title>AcousticSearch | IEM Recommendation Engine</title>
+		
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@200;300;400;600;700&display=swap" rel="stylesheet">
 	</head>
-	<body>
-		<h1>Astro</h1>
+	<body className="bg-bgBase min-h-screen selection:bg-accentPrimary/30 selection:text-accentPrimary">
+		<main>
+			<SearchApp client:load />
+		</main>
 	</body>
 </html>
