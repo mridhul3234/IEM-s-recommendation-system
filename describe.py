@@ -60,19 +60,21 @@ def describe(features: dict[str, float], iem_name: str = "Unknown") -> str:
         return cache[cache_key]
         
     # Lazy import to avoid loading the library if we hit the cache
-    import google.generativeai as genai
+    from google import genai
     
     # Ensure the API key is set
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable is missing. Cannot generate new description.")
         
-    genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
     
     prompt = PROMPT_TEMPLATE.format(**features)
-    model = genai.GenerativeModel('gemini-1.5-flash')
     
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-flash-latest',
+        contents=prompt
+    )
     desc = response.text.strip()
     
     cache[cache_key] = desc

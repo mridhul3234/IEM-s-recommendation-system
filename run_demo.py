@@ -56,8 +56,10 @@ def main():
     # --- Generated descriptions (rule-based placeholder for the LLM step) ---
     print("\n--- Generated tonal descriptions ---")
     for name, feats in rows:
-        print(f"\n{name}:")
-        print(f"  {describe(feats)}")
+        import os
+        clean_name = os.path.basename(name).replace(".csv", "")
+        print(f"\n{clean_name}:")
+        print(f"  {describe(feats, iem_name=clean_name)}")
 
     # --- Quick sanity check: which IEM is bassiest / brightest / most sibilant ---
     print("\n--- Sanity check (does the ranking make sense?) ---")
