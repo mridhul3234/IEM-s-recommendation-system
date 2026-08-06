@@ -56,7 +56,6 @@ def main():
     # --- Generated descriptions (rule-based placeholder for the LLM step) ---
     print("\n--- Generated tonal descriptions ---")
     for name, feats in rows:
-        import os
         clean_name = os.path.basename(name).replace(".csv", "")
         print(f"\n{clean_name}:")
         print(f"  {describe(feats, iem_name=clean_name)}")
