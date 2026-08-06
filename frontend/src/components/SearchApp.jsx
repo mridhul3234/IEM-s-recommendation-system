@@ -11,42 +11,67 @@ const SUGGESTED_FEATURES = [
   'V-shaped fun'
 ];
 
+const INITIAL_TOP_K = 3;
+const STEP_TOP_K = 3;
+
 export default function SearchApp() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [inferredFeatures, setInferredFeatures] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentTopK, setCurrentTopK] = useState(INITIAL_TOP_K);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
 
-  const runSearch = async (searchQuery) => {
+  const runSearch = async (searchQuery, targetTopK = INITIAL_TOP_K, isLoadMore = false) => {
     const q = searchQuery.trim();
     if (!q) return;
 
-    setLoading(true);
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      setResults([]);
+    }
     setError(null);
-    setResults([]);
 
     try {
-      const res = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(q)}&top_k=6`);
+      const res = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(q)}&top_k=${targetTopK}`);
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
+      
       setResults(data.results);
       setInferredFeatures(data.inferred_features);
+      setCurrentTopK(targetTopK);
+
+      // If returned results are fewer than requested, we've reached the dataset limit
+      if (data.results.length < targetTopK || data.results.length >= 8) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    runSearch(query);
+    runSearch(query, INITIAL_TOP_K, false);
   };
 
   const handleChipClick = (featureText) => {
     setQuery(featureText);
-    runSearch(featureText);
+    runSearch(featureText, INITIAL_TOP_K, false);
+  };
+
+  const handleSuggestMore = () => {
+    const nextTopK = currentTopK + STEP_TOP_K;
+    runSearch(query, nextTopK, true);
   };
 
   return (
@@ -113,7 +138,7 @@ export default function SearchApp() {
         </div>
       )}
 
-      {/* Results */}
+      {/* Results List */}
       <div className="space-y-8">
         {error && <div className="text-red-400 font-mono text-center">{error}</div>}
         
@@ -121,6 +146,26 @@ export default function SearchApp() {
           <ResultCard key={i} result={res} rank={i + 1} />
         ))}
       </div>
+
+      {/* 'Suggest More' Button */}
+      {results.length > 0 && (
+        <div className="text-center mt-10">
+          {hasMore ? (
+            <button
+              type="button"
+              onClick={handleSuggestMore}
+              disabled={loadingMore}
+              className="px-8 py-3.5 bg-bgSurface border border-accentPrimary/40 hover:border-accentPrimary text-accentPrimary font-mono uppercase tracking-wider text-xs rounded-lg hover:bg-accentPrimary/10 transition-all duration-300 shadow-lg disabled:opacity-50"
+            >
+              {loadingMore ? 'Loading More IEMs...' : 'Suggest More'}
+            </button>
+          ) : (
+            <div className="font-mono text-xs text-textMuted uppercase tracking-widest border-t border-bgBorder pt-6">
+              All top matching IEMs loaded
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

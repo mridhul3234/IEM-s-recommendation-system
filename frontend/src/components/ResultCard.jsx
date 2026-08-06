@@ -44,11 +44,8 @@ export default function ResultCard({ result, rank }) {
         </div>
       </div>
 
-      {/* Right Column: MiniChart */}
-      <div className="w-full md:w-64 bg-bgBase rounded-lg border border-bgBorder p-4 flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute top-3 left-3 text-[10px] font-mono text-textMuted uppercase tracking-widest z-10">
-          Acoustic Profile
-        </div>
+      {/* Right Column: High Fidelity FR Oscilloscope Chart */}
+      <div className="w-full md:w-80 flex flex-col justify-center">
         <MiniChart features={result.features} targetFeatures={result.target_features} />
       </div>
 
