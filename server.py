@@ -59,7 +59,7 @@ def startup_event():
         iem_name_clean = os.path.basename(path).replace(".csv", "")
         desc = describe(feats, iem_name=iem_name_clean)
         
-        iems.append((iem.name, feats))
+        iems.append((iem_name_clean, feats))
         descriptions.append(desc)
         corpus_vectors_list.append(to_vector(feats))
         
@@ -89,17 +89,22 @@ def search_api(q: str = Query(...), alpha: float = Query(0.5)):
             query_emb = embed_texts([q])[0]
             db_results = search_iems(client, query_emb, top_k=20)
             
-            # Reconstruct for hybrid search
-            search_iems_data = []
-            search_descriptions = []
-            corpus_vectors_list = []
-            for res in db_results:
-                search_iems_data.append((res['name'], res['features']))
-                search_descriptions.append(res['description'])
-                corpus_vectors_list.append(to_vector(res['features']))
-            
-            search_corpus_vectors = np.array(corpus_vectors_list)
-            search_corpus_embeddings = embed_texts(search_descriptions)
+            if db_results:
+                # Reconstruct for hybrid search
+                db_iems_data = []
+                db_descriptions = []
+                corpus_vectors_list = []
+                for res in db_results:
+                    db_iems_data.append((res['name'], res['features']))
+                    db_descriptions.append(res['description'])
+                    corpus_vectors_list.append(to_vector(res['features']))
+                
+                search_iems_data = db_iems_data
+                search_descriptions = db_descriptions
+                search_corpus_vectors = np.array(corpus_vectors_list)
+                search_corpus_embeddings = embed_texts(search_descriptions)
+            else:
+                print("Supabase returned 0 items. Falling back to local dataset.")
         except Exception as e:
             print(f"Supabase query failed, using local fallback. Error: {e}")
     

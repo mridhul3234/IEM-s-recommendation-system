@@ -58,7 +58,8 @@ def load_fr_csv(path: str, name: str | None = None) -> FRCurve:
     freq, db = freq[order], db[order]
 
     if name is None:
-        name = path.rsplit("/", 1)[-1].removesuffix(".csv")
+        import os
+        name = os.path.splitext(os.path.basename(path))[0]
     return FRCurve(name=name, freq=freq, db=db)
 
 

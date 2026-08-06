@@ -52,28 +52,34 @@ Respond strictly as a JSON object with the numerical float values. Do not includ
 def infer_target_profile(query: str) -> dict[str, float]:
     """Infers the acoustic profile from a user query."""
     api_key = os.environ.get("GEMINI_API_KEY")
+    default_profile = {
+        "sub_bass": 0.0, "bass": 0.0, "low_mids": 0.0, "mids": 0.0,
+        "presence": 0.0, "treble": 0.0, "air": 0.0,
+        "sibilance_risk": 0.0, "tonal_tilt": 0.0, "bass_to_treble": 0.0
+    }
+    
     if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable is missing. Cannot run LLM inference.")
-        
+        print("Warning: GEMINI_API_KEY environment variable is missing. Defaulting to neutral profile.")
+        return default_profile
+
+    models_to_try = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-flash-latest']
     client = genai.Client(api_key=api_key)
-    
-    response = client.models.generate_content(
-        model='gemini-flash-latest',
-        contents=PROMPT.format(query=query),
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=TargetProfile,
-            temperature=0.0
-        )
-    )
-    
-    try:
-        return json.loads(response.text)
-    except json.JSONDecodeError:
-        # Fallback to an all-zero dictionary if parsing fails
-        print("Warning: LLM returned invalid JSON. Defaulting to neutral profile.")
-        return {
-            "sub_bass": 0.0, "bass": 0.0, "low_mids": 0.0, "mids": 0.0,
-            "presence": 0.0, "treble": 0.0, "air": 0.0,
-            "sibilance_risk": 0.0, "tonal_tilt": 0.0, "bass_to_treble": 0.0
-        }
+
+    for model in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=PROMPT.format(query=query),
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=TargetProfile,
+                    temperature=0.0
+                )
+            )
+            return json.loads(response.text)
+        except Exception as e:
+            print(f"Warning: Gemini API call failed with model {model}: {e}")
+            continue
+
+    print("Warning: All Gemini API model attempts failed or timed out. Defaulting to neutral acoustic profile.")
+    return default_profile

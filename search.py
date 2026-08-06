@@ -11,8 +11,10 @@ from embed import embed_texts
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Compute cosine similarity between vector a and matrix b."""
+    if len(b) == 0:
+        return np.array([])
     a_norm = np.linalg.norm(a)
-    b_norm = np.linalg.norm(b, axis=1)
+    b_norm = np.linalg.norm(b, axis=1) if b.ndim > 1 else np.linalg.norm(b)
     # Avoid division by zero
     if a_norm == 0:
         return np.zeros(len(b))
@@ -38,8 +40,10 @@ def semantic_search(query: str, corpus_texts: list[str], corpus_embeddings: np.n
 
 def acoustic_similarity(inferred_vector: np.ndarray, corpus_vectors: np.ndarray) -> np.ndarray:
     """Compute an acoustic similarity score in [0, 1] using Euclidean distance."""
+    if len(corpus_vectors) == 0:
+        return np.array([])
     # Distance shape: (N,)
-    distances = np.linalg.norm(corpus_vectors - inferred_vector, axis=1)
+    distances = np.linalg.norm(corpus_vectors - inferred_vector, axis=1) if corpus_vectors.ndim > 1 else np.linalg.norm(corpus_vectors - inferred_vector)
     # Convert distance to similarity
     return 1.0 / (1.0 + distances)
 
