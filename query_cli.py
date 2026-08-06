@@ -51,7 +51,8 @@ def main():
         iem = load_fr_csv(path)
         freq, deviation = deviation_from_target(iem, target, grid_hz=grid)
         feats = extract_features(freq, deviation)
-        desc = describe(feats)
+        iem_name_clean = os.path.basename(path).replace(".csv", "")
+        desc = describe(feats, iem_name=iem_name_clean)
         
         iems.append((iem.name, feats))
         descriptions.append(desc)

@@ -1,30 +1,16 @@
 """
 describe.py
 
-Turns a feature dict into a short natural-language tonal description.
-
-This file is a RULE-BASED STAND-IN for the LLM step in the full design.
-It exists so the pipeline is fully runnable end-to-end right now, without
-an API key, and so you can unit-test the embedding/search step against
-consistent, deterministic text before variance from an LLM enters the
-picture.
-
-When you're ready to add the real LLM step, replace `describe()` below
-with a call like:
-
-    prompt = PROMPT_TEMPLATE.format(**features)
-    response = client.messages.create(
-        model="claude-...",
-        max_tokens=200,
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-...and use the model's prose instead. Keep PROMPT_TEMPLATE below as your
-starting point -- it's already shaped to the exact feature dict this
-module produces.
+Turns a feature dict into a short natural-language tonal description using an LLM.
+Includes an offline caching mechanism to avoid re-running the LLM for unchanged
+feature vectors.
 """
 
 from __future__ import annotations
+
+import json
+import os
+import hashlib
 
 PROMPT_TEMPLATE = """You are an audio reviewer describing an IEM's tonal \
 character from measured frequency-response data. Do not mention numbers \
@@ -45,41 +31,51 @@ Overall tonal tilt (negative = warm, positive = bright): {tonal_tilt}
 Write 1-2 sentences describing the tonal signature, suitable for someone \
 searching for an IEM by vibe rather than by spec."""
 
+CACHE_FILE = "descriptions_cache.json"
 
-def describe(features: dict[str, float]) -> str:
-    """Deterministic, threshold-based description. Same shape of output
-    as what the LLM prompt above should eventually produce."""
-    parts = []
+def _hash_features(features: dict[str, float]) -> str:
+    # Sort keys for deterministic hashing
+    stable_repr = json.dumps(features, sort_keys=True)
+    return hashlib.md5(stable_repr.encode("utf-8")).hexdigest()
 
-    if features["bass"] > 4:
-        parts.append("heavy, elevated bass")
-    elif features["bass"] > 1.5:
-        parts.append("warm, present bass")
-    elif features["bass"] < -2:
-        parts.append("lean, reserved bass")
-    else:
-        parts.append("neutral bass")
+def _load_cache() -> dict[str, str]:
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            return json.load(f)
+    return {}
 
-    if features["mids"] > 2:
-        parts.append("forward, present vocals")
-    elif features["mids"] < -2:
-        parts.append("recessed, laid-back mids")
+def _save_cache(cache: dict[str, str]):
+    with open(CACHE_FILE, "w") as f:
+        json.dump(cache, f, indent=2)
 
-    if features["sibilance_risk"] > 3:
-        parts.append("a noticeable sibilance peak in the treble")
-    elif features["sibilance_risk"] > 1.2:
-        parts.append("mild treble sharpness")
-
-    if features["tonal_tilt"] < -1.5:
-        parts.append("an overall warm, smooth tonal tilt")
-    elif features["tonal_tilt"] > 1.5:
-        parts.append("an overall bright, energetic tonal tilt")
-
-    if features["air"] > 2:
-        parts.append("extended, airy top end")
-    elif features["air"] < -3:
-        parts.append("rolled-off upper treble")
-
-    if not parts:
-        return "A fairly neutral, balanced tonal signature."
-    return ("Has " + ", ".join(parts) + ".").replace(", .", ".")
+def describe(features: dict[str, float], iem_name: str = "Unknown") -> str:
+    """LLM-based description. Checks a local cache first."""
+    cache = _load_cache()
+    
+    # Key is IEM name + hash of the features
+    feat_hash = _hash_features(features)
+    cache_key = f"{iem_name}_{feat_hash}"
+    
+    if cache_key in cache:
+        return cache[cache_key]
+        
+    # Lazy import to avoid loading the library if we hit the cache
+    import google.generativeai as genai
+    
+    # Ensure the API key is set
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY environment variable is missing. Cannot generate new description.")
+        
+    genai.configure(api_key=api_key)
+    
+    prompt = PROMPT_TEMPLATE.format(**features)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    response = model.generate_content(prompt)
+    desc = response.text.strip()
+    
+    cache[cache_key] = desc
+    _save_cache(cache)
+    
+    return desc
