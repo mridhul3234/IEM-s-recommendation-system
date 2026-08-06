@@ -61,12 +61,19 @@ def sibilance_risk(freq: np.ndarray, deviation_db: np.ndarray) -> float:
     presence-band baseline. A tall, narrow peak here scores high; a curve
     that's just generally forward through the mids/presence does not,
     because it's the *peak above baseline*, not the absolute level, that
-    correlates with perceived sibilance."""
+    correlates with perceived sibilance.
+    
+    Recalibrated: If the absolute peak is below neutral (0 dB), it is
+    not perceived as sibilant regardless of the relative jump."""
     mask = _band_mask(freq, *SIBILANCE_BAND)
     if not mask.any():
         return 0.0
     baseline = float(np.mean(deviation_db[_band_mask(freq, 2000, 5000)]))
     peak = float(np.max(deviation_db[mask]))
+    
+    if peak <= 0:
+        return 0.0
+        
     return round(max(0.0, peak - baseline), 2)
 
 
