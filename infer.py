@@ -81,5 +81,22 @@ def infer_target_profile(query: str) -> dict[str, float]:
             print(f"Warning: Gemini API call failed with model {model}: {e}")
             continue
 
-    print("Warning: All Gemini API model attempts failed or timed out. Defaulting to neutral acoustic profile.")
+    # Ollama Fallback
+    print("Warning: All Gemini API model attempts failed or timed out. Attempting Local Ollama Fallback...")
+    import requests
+    try:
+        payload = {
+            "model": "llama3",
+            "prompt": PROMPT.format(query=query),
+            "format": "json",
+            "stream": False
+        }
+        res = requests.post("http://localhost:11434/api/generate", json=payload, timeout=15)
+        if res.status_code == 200:
+            data = res.json()
+            return json.loads(data.get("response", "{}"))
+    except Exception as e:
+        print(f"Local Ollama fallback failed: {e}")
+
+    print("All inference methods failed. Defaulting to neutral acoustic profile.")
     return default_profile

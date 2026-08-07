@@ -88,9 +88,17 @@ def startup_event():
     print("Local fallback data loaded.")
 
 @app.get("/search")
-def search_api(q: str = Query(...), alpha: float = Query(0.5), top_k: int = Query(6), price_tier: str = Query("all")):
-    # Infer features
-    inferred_features = infer_target_profile(q)
+def search_api(q: str = Query(""), alpha: float = Query(0.5), top_k: int = Query(6), price_tier: str = Query("all"), exact_features: str = Query(None)):
+    import json
+    # If exact_features are provided, parse them and skip LLM.
+    if exact_features:
+        inferred_features = json.loads(exact_features)
+        # Force alpha to 1.0 (pure acoustic math) if there is no text query
+        if not q.strip():
+            alpha = 1.0
+    else:
+        inferred_features = infer_target_profile(q)
+        
     inferred_vector = to_vector(inferred_features)
     
     # Try Supabase first
@@ -102,7 +110,7 @@ def search_api(q: str = Query(...), alpha: float = Query(0.5), top_k: int = Quer
     search_corpus_vectors = corpus_vectors
     search_corpus_embeddings = corpus_embeddings
     
-    if use_supabase:
+    if use_supabase and q.strip():
         try:
             from db import get_client, search_iems
             client = get_client()

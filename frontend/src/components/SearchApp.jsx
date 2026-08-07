@@ -15,7 +15,15 @@ const INITIAL_TOP_K = 3;
 const STEP_TOP_K = 3;
 
 export default function SearchApp() {
+  const DEFAULT_EXACT_FEATURES = {
+    sub_bass: 0, bass: 0, low_mids: 0, mids: 0,
+    presence: 0, treble: 0, air: 0,
+    sibilance_risk: 0, tonal_tilt: 0, bass_to_treble: 0
+  };
+
   const [query, setQuery] = useState('');
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [exactFeatures, setExactFeatures] = useState(DEFAULT_EXACT_FEATURES);
   const [priceTier, setPriceTier] = useState('all'); // 'all', 'cheaper', 'costlier'
   const [results, setResults] = useState([]);
   const [inferredFeatures, setInferredFeatures] = useState(null);
@@ -28,7 +36,7 @@ export default function SearchApp() {
 
   const runSearch = async (searchQuery, targetTopK = INITIAL_TOP_K, isLoadMore = false, selectedPriceTier = priceTier) => {
     const q = searchQuery.trim();
-    if (!q) return;
+    if (!q && !advancedMode) return;
 
     if (isLoadMore) {
       setLoadingMore(true);
@@ -40,7 +48,13 @@ export default function SearchApp() {
 
     try {
       const ts = Date.now();
-      const res = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(q)}&top_k=${targetTopK}&price_tier=${selectedPriceTier}&_t=${ts}`);
+      let url = `http://localhost:8000/search?top_k=${targetTopK}&price_tier=${selectedPriceTier}&_t=${ts}`;
+      if (advancedMode) {
+        url += `&q=${encodeURIComponent(q || "")}&exact_features=${encodeURIComponent(JSON.stringify(exactFeatures))}`;
+      } else {
+        url += `&q=${encodeURIComponent(q)}`;
+      }
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
       
@@ -147,10 +161,11 @@ export default function SearchApp() {
         <div className="relative flex items-center bg-bgSurface border border-bgBorder rounded-lg overflow-hidden">
           <input 
             type="text" 
-            className="w-full bg-transparent text-textPrimary font-body px-6 py-4 outline-none placeholder-textMuted/50"
-            placeholder="e.g. 'Very bassy but minimal treble'"
+            className={`w-full bg-transparent text-textPrimary font-body px-6 py-4 outline-none placeholder-textMuted/50 ${advancedMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+            placeholder={advancedMode ? "Text search disabled in Advanced Mode" : "e.g. 'Very bassy but minimal treble'"}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            disabled={advancedMode}
           />
           <button 
             type="submit"
@@ -161,6 +176,63 @@ export default function SearchApp() {
           </button>
         </div>
       </form>
+
+      {/* Advanced Mode Toggle */}
+      <div className="flex justify-center mb-6">
+        <button
+          type="button"
+          onClick={() => setAdvancedMode(!advancedMode)}
+          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider rounded-lg border transition-all duration-200 ${
+            advancedMode
+              ? 'bg-accentSecondary text-bgSurface font-bold border-accentSecondary shadow-lg'
+              : 'bg-bgSurface text-textMuted border-bgBorder hover:border-accentSecondary/50 hover:text-textPrimary'
+          }`}
+        >
+          {advancedMode ? 'Hide Advanced EQ' : 'Advanced Acoustic EQ'}
+        </button>
+      </div>
+
+      {/* Advanced EQ Sliders */}
+      {advancedMode && (
+        <div className="max-w-4xl mx-auto mb-12 p-8 bg-bgSurface border border-bgBorder rounded-xl shadow-2xl">
+          <div className="text-center mb-8 text-sm text-textMuted font-mono">
+            Manually draw your exact acoustic target profile in decibels (dB). <br/>
+            <span className="text-accentSecondary text-xs">Note: Semantic text search is bypassed when using this mode.</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-y-12 gap-x-6">
+            {Object.keys(exactFeatures).map((key) => (
+              <div key={key} className="flex flex-col items-center">
+                <label className="text-xs font-mono text-accentPrimary uppercase tracking-widest mb-4 h-8 text-center flex items-center">
+                  {key.replace(/_/g, ' ')}
+                </label>
+                <div className="h-40 flex items-center justify-center">
+                  <input 
+                    type="range"
+                    min={key.includes('sibilance') ? "0" : "-10"} 
+                    max="10" 
+                    step="0.5"
+                    value={exactFeatures[key]}
+                    onChange={(e) => setExactFeatures({...exactFeatures, [key]: parseFloat(e.target.value)})}
+                    className="w-40 -rotate-90 appearance-none bg-bgBorder h-2 rounded-full outline-none cursor-pointer accent-[#C19B76]"
+                  />
+                </div>
+                <div className="text-xs font-mono text-textPrimary mt-4 bg-bgBackground px-3 py-1 rounded-md border border-bgBorder">
+                  {exactFeatures[key] > 0 ? '+' : ''}{exactFeatures[key].toFixed(1)}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={() => runSearch(query)}
+              disabled={loading}
+              className="px-8 py-3 bg-gradient-to-r from-accentSecondary to-accentPrimary text-bgBackground font-bold font-mono uppercase tracking-wider rounded-lg shadow-lg hover:shadow-accentPrimary/50 transition-all duration-300 disabled:opacity-50"
+            >
+              {loading ? 'Calculating Matches...' : 'Find Matches'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Quick Search Feature Suggestions */}
       <div className="max-w-2xl mx-auto mb-12">
