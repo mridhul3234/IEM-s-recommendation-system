@@ -1,9 +1,9 @@
 import React from 'react';
 import MiniChart from './MiniChart';
 
-export default function ResultCard({ result, rank }) {
+export default function ResultCard({ result, rank, isCompared, onToggleCompare }) {
   return (
-    <div className="bg-bgSurface border border-bgBorder rounded-xl p-6 flex flex-col md:flex-row gap-8 hover:border-accentPrimary/50 transition-colors duration-300">
+    <div className="bg-bgSurface border border-bgBorder rounded-xl p-6 flex flex-col md:flex-row gap-8 hover:border-accentPrimary/50 transition-colors duration-300 relative">
       
       {/* Left Column: Metadata */}
       <div className="flex-1 flex flex-col justify-between">
@@ -11,7 +11,9 @@ export default function ResultCard({ result, rank }) {
           <div className="flex items-baseline justify-between mb-2">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-accentPrimary font-bold text-xl">0{rank}</span>
-              <h2 className="font-display text-2xl text-textPrimary tracking-wide uppercase">{result.name}</h2>
+              <a href={`/iem?name=${encodeURIComponent(result.name)}`} className="font-display text-2xl text-textPrimary tracking-wide uppercase hover:text-accentPrimary transition-colors cursor-pointer">
+                {result.name}
+              </a>
             </div>
             {result.features?.price && (
               <span className="font-mono text-textPrimary text-xl tracking-wider">
@@ -55,6 +57,20 @@ export default function ResultCard({ result, rank }) {
       <div className="w-full md:w-80 flex flex-col justify-center">
         <MiniChart features={result.features} targetFeatures={result.target_features} />
       </div>
+
+      {/* Compare Button (Bottom Right) */}
+      {onToggleCompare && (
+        <button
+          onClick={onToggleCompare}
+          className={`absolute bottom-6 right-6 px-4 py-2 font-mono text-xs uppercase tracking-wider rounded border transition-all duration-200 ${
+            isCompared
+              ? 'bg-accentPrimary/20 text-accentPrimary border-accentPrimary/50'
+              : 'bg-transparent text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-accentPrimary'
+          }`}
+        >
+          {isCompared ? 'Added to Compare' : '+ Compare'}
+        </button>
+      )}
 
     </div>
   );

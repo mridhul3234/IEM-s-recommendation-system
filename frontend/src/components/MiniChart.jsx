@@ -18,7 +18,7 @@ const Y_TICKS = [
   { db: -12, label: "-12" }
 ];
 
-export default function MiniChart({ features, targetFeatures }) {
+export default function MiniChart({ features, targetFeatures, datasets }) {
   const width = 340;
   const height = 190;
   
@@ -39,11 +39,12 @@ export default function MiniChart({ features, targetFeatures }) {
     return paddingLeft + (index / (BANDS.length - 1)) * innerWidth;
   };
   
-  // Calculate points
-  const points = BANDS.map((b, i) => ({
-    x: mapX(i),
-    y: mapY(features[b.key] || 0)
-  }));
+  // Prepare datasets to draw
+  const linesToDraw = datasets || [];
+  if (!datasets) {
+    if (features) linesToDraw.push({ features, color: '#ef4444', isGlow: true });
+    if (targetFeatures) linesToDraw.push({ features: targetFeatures, color: '#8F9BAC', isDashed: true });
+  }
 
   // Create smooth Bezier curve
   const getSmoothPath = (pts) => {
@@ -57,10 +58,8 @@ export default function MiniChart({ features, targetFeatures }) {
     }
     return path;
   };
-
-  const linePath = getSmoothPath(points);
+  
   const bottomY = paddingTop + innerHeight;
-  const areaPath = `${linePath} L ${mapX(BANDS.length - 1)} ${bottomY} L ${mapX(0)} ${bottomY} Z`;
 
   return (
     <div className="w-full bg-[#080b10] border border-[#1d2636] rounded-lg p-2 relative select-none">
@@ -131,22 +130,32 @@ export default function MiniChart({ features, targetFeatures }) {
           );
         })}
 
-        {/* Gradient Red Fill under Curve */}
-        <path d={areaPath} fill="url(#redGlowGradient)" />
+        {/* Render Lines */}
+        {linesToDraw.map((ds, idx) => {
+          const pts = BANDS.map((b, i) => ({
+            x: mapX(i),
+            y: mapY(ds.features[b.key] || 0)
+          }));
+          const path = getSmoothPath(pts);
+          const aPath = `${path} L ${mapX(BANDS.length - 1)} ${bottomY} L ${mapX(0)} ${bottomY} Z`;
 
-        {/* Smooth Crimson Curve Line */}
-        <path 
-          d={linePath} 
-          fill="none" 
-          stroke="#ef4444" 
-          strokeWidth="2.5" 
-          strokeLinecap="round"
-        />
-
-        {/* Data points */}
-        {points.map((pt, i) => (
-          <circle key={i} cx={pt.x} cy={pt.y} r="2.5" fill="#080b10" stroke="#ef4444" strokeWidth="1.5" />
-        ))}
+          return (
+            <g key={idx}>
+              {ds.isGlow && <path d={aPath} fill="url(#redGlowGradient)" />}
+              <path 
+                d={path} 
+                fill="none" 
+                stroke={ds.color} 
+                strokeWidth={ds.isDashed ? "1.5" : "2.5"} 
+                strokeLinecap="round"
+                strokeDasharray={ds.isDashed ? "4 4" : "none"}
+              />
+              {!ds.isDashed && pts.map((pt, i) => (
+                <circle key={i} cx={pt.x} cy={pt.y} r="2.5" fill="#080b10" stroke={ds.color} strokeWidth="1.5" />
+              ))}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

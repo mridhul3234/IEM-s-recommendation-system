@@ -16,6 +16,7 @@ const STEP_TOP_K = 3;
 
 export default function SearchApp() {
   const [query, setQuery] = useState('');
+  const [priceTier, setPriceTier] = useState('all'); // 'all', 'cheaper', 'costlier'
   const [results, setResults] = useState([]);
   const [inferredFeatures, setInferredFeatures] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -23,8 +24,9 @@ export default function SearchApp() {
   const [currentTopK, setCurrentTopK] = useState(INITIAL_TOP_K);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
+  const [compareCart, setCompareCart] = useState([]);
 
-  const runSearch = async (searchQuery, targetTopK = INITIAL_TOP_K, isLoadMore = false) => {
+  const runSearch = async (searchQuery, targetTopK = INITIAL_TOP_K, isLoadMore = false, selectedPriceTier = priceTier) => {
     const q = searchQuery.trim();
     if (!q) return;
 
@@ -38,7 +40,7 @@ export default function SearchApp() {
 
     try {
       const ts = Date.now();
-      const res = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(q)}&top_k=${targetTopK}&_t=${ts}`);
+      const res = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(q)}&top_k=${targetTopK}&price_tier=${selectedPriceTier}&_t=${ts}`);
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
       
@@ -47,7 +49,7 @@ export default function SearchApp() {
       setCurrentTopK(targetTopK);
 
       // If returned results are fewer than requested, we've reached the dataset limit
-      if (data.results.length < targetTopK || data.results.length >= 8) {
+      if (data.results.length < targetTopK) {
         setHasMore(false);
       } else {
         setHasMore(true);
@@ -60,19 +62,34 @@ export default function SearchApp() {
     }
   };
 
+  const handlePriceTierChange = (tier) => {
+    setPriceTier(tier);
+    if (query.trim()) {
+      runSearch(query, INITIAL_TOP_K, false, tier);
+    }
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    runSearch(query, INITIAL_TOP_K, false);
+    runSearch(query, INITIAL_TOP_K, false, priceTier);
   };
 
   const handleChipClick = (featureText) => {
     setQuery(featureText);
-    runSearch(featureText, INITIAL_TOP_K, false);
+    runSearch(featureText, INITIAL_TOP_K, false, priceTier);
   };
 
   const handleSuggestMore = () => {
     const nextTopK = currentTopK + STEP_TOP_K;
-    runSearch(query, nextTopK, true);
+    runSearch(query, nextTopK, true, priceTier);
+  };
+
+  const handleToggleCompare = (iemName) => {
+    setCompareCart(prev => {
+      if (prev.includes(iemName)) return prev.filter(n => n !== iemName);
+      if (prev.length >= 3) return prev; // Max 3 items
+      return [...prev, iemName];
+    });
   };
 
   return (
@@ -85,6 +102,43 @@ export default function SearchApp() {
         <p className="font-body text-textMuted max-w-xl mx-auto">
           Describe the exact tonal properties you are looking for in an IEM. Our hybrid engine will extract your acoustic target and find the closest matches.
         </p>
+      </div>
+
+      {/* Price Tier Selection Buttons */}
+      <div className="flex justify-center gap-3 mb-6">
+        <button
+          type="button"
+          onClick={() => handlePriceTierChange('all')}
+          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider rounded-lg border transition-all duration-200 ${
+            priceTier === 'all'
+              ? 'bg-accentPrimary text-bgSurface font-bold border-accentPrimary shadow-lg'
+              : 'bg-bgSurface text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-textPrimary'
+          }`}
+        >
+          All Prices
+        </button>
+        <button
+          type="button"
+          onClick={() => handlePriceTierChange('cheaper')}
+          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider rounded-lg border transition-all duration-200 ${
+            priceTier === 'cheaper'
+              ? 'bg-accentPrimary text-bgSurface font-bold border-accentPrimary shadow-lg'
+              : 'bg-bgSurface text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-textPrimary'
+          }`}
+        >
+          Cheaper (&lt; $500)
+        </button>
+        <button
+          type="button"
+          onClick={() => handlePriceTierChange('costlier')}
+          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider rounded-lg border transition-all duration-200 ${
+            priceTier === 'costlier'
+              ? 'bg-accentPrimary text-bgSurface font-bold border-accentPrimary shadow-lg'
+              : 'bg-bgSurface text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-textPrimary'
+          }`}
+        >
+          Costlier (&ge; $500)
+        </button>
       </div>
 
       {/* Search Bar */}
@@ -143,27 +197,39 @@ export default function SearchApp() {
       <div className="space-y-12">
         {error && <div className="text-red-400 font-mono text-center">{error}</div>}
         
-        {results.filter(r => r.features?.price < 200).length > 0 && (
+        {results.filter(r => r.features?.price < 500).length > 0 && (
           <div>
             <h3 className="font-display text-xl text-textPrimary tracking-wide uppercase mb-6 border-b border-bgBorder pb-2">
-              Budget Picks (Under $200)
+              Cheaper Picks (Under $500)
             </h3>
             <div className="space-y-8">
-              {results.filter(r => r.features?.price < 200).map((res) => (
-                <ResultCard key={res.name} result={res} rank={results.indexOf(res) + 1} />
+              {results.filter(r => r.features?.price < 500).map((res) => (
+                <ResultCard 
+                  key={res.name} 
+                  result={res} 
+                  rank={results.indexOf(res) + 1} 
+                  isCompared={compareCart.includes(res.name)}
+                  onToggleCompare={() => handleToggleCompare(res.name)}
+                />
               ))}
             </div>
           </div>
         )}
 
-        {results.filter(r => !r.features?.price || r.features?.price >= 200).length > 0 && (
+        {results.filter(r => !r.features?.price || r.features?.price >= 500).length > 0 && (
           <div>
             <h3 className="font-display text-xl text-textPrimary tracking-wide uppercase mb-6 border-b border-bgBorder pb-2">
-              Premium Picks ($200+)
+              Costlier Picks ($500+)
             </h3>
             <div className="space-y-8">
-              {results.filter(r => !r.features?.price || r.features?.price >= 200).map((res) => (
-                <ResultCard key={res.name} result={res} rank={results.indexOf(res) + 1} />
+              {results.filter(r => !r.features?.price || r.features?.price >= 500).map((res) => (
+                <ResultCard 
+                  key={res.name} 
+                  result={res} 
+                  rank={results.indexOf(res) + 1}
+                  isCompared={compareCart.includes(res.name)}
+                  onToggleCompare={() => handleToggleCompare(res.name)}
+                />
               ))}
             </div>
           </div>
@@ -187,6 +253,21 @@ export default function SearchApp() {
               All top matching IEMs loaded
             </div>
           )}
+        </div>
+      )}
+
+      {/* Floating Compare Action Bar */}
+      {compareCart.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#080b10] border border-accentPrimary/50 shadow-2xl shadow-accentPrimary/20 rounded-full px-6 py-3 flex items-center gap-6 z-50">
+          <span className="font-mono text-xs text-textPrimary uppercase tracking-widest">
+            {compareCart.length} selected
+          </span>
+          <a 
+            href={"/compare?" + compareCart.map((c, i) => `iem${i+1}=${encodeURIComponent(c)}`).join('&')}
+            className="px-4 py-2 bg-accentPrimary text-bgSurface rounded-full font-mono text-xs uppercase tracking-wider font-bold hover:opacity-90 transition-opacity"
+          >
+            Compare Now
+          </a>
         </div>
       )}
     </div>

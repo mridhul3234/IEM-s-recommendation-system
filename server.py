@@ -88,7 +88,7 @@ def startup_event():
     print("Local fallback data loaded.")
 
 @app.get("/search")
-def search_api(q: str = Query(...), alpha: float = Query(0.5), top_k: int = Query(6)):
+def search_api(q: str = Query(...), alpha: float = Query(0.5), top_k: int = Query(6), price_tier: str = Query("all")):
     # Infer features
     inferred_features = infer_target_profile(q)
     inferred_vector = to_vector(inferred_features)
@@ -128,6 +128,29 @@ def search_api(q: str = Query(...), alpha: float = Query(0.5), top_k: int = Quer
         except Exception as e:
             print(f"Supabase query failed, using local fallback. Error: {e}")
     
+    # Apply Price Tier Filtering if requested ("cheaper" = < 500, "costlier" = >= 500)
+    if price_tier in ("cheaper", "costlier"):
+        filtered_iems = []
+        filtered_descs = []
+        filtered_vecs = []
+        
+        for i, (name, feats) in enumerate(search_iems_data):
+            price = feats.get("price", 0) if isinstance(feats, dict) else 0
+            if price_tier == "cheaper" and price < 500:
+                filtered_iems.append((name, feats))
+                filtered_descs.append(search_descriptions[i])
+                filtered_vecs.append(search_corpus_vectors[i])
+            elif price_tier == "costlier" and price >= 500:
+                filtered_iems.append((name, feats))
+                filtered_descs.append(search_descriptions[i])
+                filtered_vecs.append(search_corpus_vectors[i])
+                
+        if filtered_iems:
+            search_iems_data = filtered_iems
+            search_descriptions = filtered_descs
+            search_corpus_vectors = np.array(filtered_vecs)
+            search_corpus_embeddings = embed_texts(search_descriptions)
+
     results = hybrid_search(
         query=q,
         inferred_profile=inferred_vector,
@@ -156,6 +179,47 @@ def search_api(q: str = Query(...), alpha: float = Query(0.5), top_k: int = Quer
         })
         
     return {"results": output, "inferred_features": inferred_features}
+
+@app.get("/iem/{name}")
+def get_iem_api(name: str):
+    use_supabase = os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_KEY")
+    if not use_supabase:
+        return {"error": "Supabase not configured"}
+        
+    try:
+        from db import get_client, search_iems
+        client = get_client()
+        
+        # 1. Fetch the exact IEM
+        res = client.table("iems").select("*").eq("name", name).execute()
+        if not res.data:
+            return {"error": "IEM not found"}
+            
+        iem_data = res.data[0]
+        
+        # 2. Fetch similar IEMs using its embedding
+        embedding = iem_data.get('embedding')
+        similar_items = []
+        if embedding:
+            # search_iems returns list of dicts. We request top_k=6 because the 1st match will be the IEM itself
+            import numpy as np
+            db_results = search_iems(client, np.array(embedding), top_k=6)
+            for sr in db_results:
+                if sr['name'] != name:
+                    similar_items.append({
+                        "name": sr['name'],
+                        "description": sr['description'],
+                        "features": sr['features']
+                    })
+                    if len(similar_items) == 5:
+                        break
+                        
+        return {
+            "iem": iem_data,
+            "similar": similar_items
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
