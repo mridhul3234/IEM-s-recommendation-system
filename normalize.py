@@ -38,17 +38,16 @@ def load_fr_csv(path: str, name: str | None = None) -> FRCurve:
     """Load a two-column (frequency, raw) CSV like the ones in AutoEq's
     measurements/ and targets/ folders."""
     freqs, dbs = [], []
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
-        header = next(reader)
-        assert [h.strip().lower() for h in header[:2]] == ["frequency", "raw"], (
-            f"Unexpected header {header} in {path}"
-        )
         for row in reader:
-            if not row:
+            if not row or len(row) < 2:
                 continue
-            freqs.append(float(row[0]))
-            dbs.append(float(row[1]))
+            try:
+                freqs.append(float(row[0]))
+                dbs.append(float(row[1]))
+            except ValueError:
+                pass
 
     freq = np.array(freqs, dtype=float)
     db = np.array(dbs, dtype=float)

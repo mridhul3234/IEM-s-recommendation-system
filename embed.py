@@ -22,8 +22,15 @@ _model = None
 def get_model():
     global _model
     if _model is None:
+        # Prevent huggingface from trying to check for updates and hanging on HTTP 429s
+        os.environ["HF_HUB_OFFLINE"] = "1"
         from sentence_transformers import SentenceTransformer
-        _model = SentenceTransformer(MODEL_NAME)
+        try:
+            _model = SentenceTransformer(MODEL_NAME, local_files_only=True)
+        except Exception:
+            # Fallback if not fully cached, though it usually is
+            os.environ["HF_HUB_OFFLINE"] = "0"
+            _model = SentenceTransformer(MODEL_NAME)
     return _model
 
 def load_cache() -> dict[str, list[float]]:

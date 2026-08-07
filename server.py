@@ -135,7 +135,11 @@ def search_api(q: str = Query(...), alpha: float = Query(0.5), top_k: int = Quer
         filtered_vecs = []
         
         for i, (name, feats) in enumerate(search_iems_data):
-            price = feats.get("price", 0) if isinstance(feats, dict) else 0
+            try:
+                price = float(feats.get("price", 0)) if isinstance(feats, dict) else 0
+            except (ValueError, TypeError):
+                price = 0
+                
             if price_tier == "cheaper" and price < 500:
                 filtered_iems.append((name, feats))
                 filtered_descs.append(search_descriptions[i])
