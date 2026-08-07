@@ -8,9 +8,16 @@ export default function ResultCard({ result, rank }) {
       {/* Left Column: Metadata */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex items-baseline gap-3 mb-2">
-            <span className="font-mono text-accentPrimary font-bold text-xl">0{rank}</span>
-            <h2 className="font-display text-2xl text-textPrimary tracking-wide uppercase">{result.name}</h2>
+          <div className="flex items-baseline justify-between mb-2">
+            <div className="flex items-baseline gap-3">
+              <span className="font-mono text-accentPrimary font-bold text-xl">0{rank}</span>
+              <h2 className="font-display text-2xl text-textPrimary tracking-wide uppercase">{result.name}</h2>
+            </div>
+            {result.features?.price && (
+              <span className="font-mono text-textPrimary text-xl tracking-wider">
+                ${result.features.price}
+              </span>
+            )}
           </div>
           
           {/* Explanation Badges */}

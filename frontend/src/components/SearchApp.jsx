@@ -37,7 +37,8 @@ export default function SearchApp() {
     setError(null);
 
     try {
-      const res = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(q)}&top_k=${targetTopK}`);
+      const ts = Date.now();
+      const res = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(q)}&top_k=${targetTopK}&_t=${ts}`);
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
       
@@ -139,12 +140,34 @@ export default function SearchApp() {
       )}
 
       {/* Results List */}
-      <div className="space-y-8">
+      <div className="space-y-12">
         {error && <div className="text-red-400 font-mono text-center">{error}</div>}
         
-        {results.map((res, i) => (
-          <ResultCard key={i} result={res} rank={i + 1} />
-        ))}
+        {results.filter(r => r.features?.price < 200).length > 0 && (
+          <div>
+            <h3 className="font-display text-xl text-textPrimary tracking-wide uppercase mb-6 border-b border-bgBorder pb-2">
+              Budget Picks (Under $200)
+            </h3>
+            <div className="space-y-8">
+              {results.filter(r => r.features?.price < 200).map((res) => (
+                <ResultCard key={res.name} result={res} rank={results.indexOf(res) + 1} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {results.filter(r => !r.features?.price || r.features?.price >= 200).length > 0 && (
+          <div>
+            <h3 className="font-display text-xl text-textPrimary tracking-wide uppercase mb-6 border-b border-bgBorder pb-2">
+              Premium Picks ($200+)
+            </h3>
+            <div className="space-y-8">
+              {results.filter(r => !r.features?.price || r.features?.price >= 200).map((res) => (
+                <ResultCard key={res.name} result={res} rank={results.indexOf(res) + 1} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 'Suggest More' Button */}

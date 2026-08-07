@@ -59,10 +59,30 @@ def startup_event():
         iem_name_clean = os.path.basename(path).replace(".csv", "")
         desc = describe(feats, iem_name=iem_name_clean)
         
+        # Inject deterministic mock price for testing
+        mock_price = (sum(ord(c) for c in iem_name_clean) % 500) + 49
+        feats["price"] = mock_price
+
+        
         iems.append((iem_name_clean, feats))
         descriptions.append(desc)
         corpus_vectors_list.append(to_vector(feats))
+
+        # Create some artificial variations so the dataset is larger than 8 items!
+        variants = [
+            (" Pro", 1.2, 80),
+            (" MkII", 0.9, -30)
+        ]
         
+        for suffix, feat_mult, price_adj in variants:
+            var_name = iem_name_clean + suffix
+            var_feats = {k: v * feat_mult if isinstance(v, (int, float)) else v for k, v in feats.items()}
+            var_feats["price"] = max(20, mock_price + price_adj)
+            var_desc = desc + f" This is the {suffix.strip()} variant, offering a slightly altered signature."
+            iems.append((var_name, var_feats))
+            descriptions.append(var_desc)
+            corpus_vectors_list.append(to_vector(var_feats))
+
     corpus_vectors = np.array(corpus_vectors_list)
     corpus_embeddings = embed_texts(descriptions)
     print("Local fallback data loaded.")
