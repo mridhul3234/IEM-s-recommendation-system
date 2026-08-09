@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import ResultCard from './ResultCard';
 
+import PriceTierButton from './PriceTierButton';
+import EqSliderGrid from './EqSliderGrid';
+
 const SUGGESTED_FEATURES = [
   'Very bassy',
   'Warm & punchy',
@@ -78,13 +81,15 @@ export default function SearchApp() {
 
   const handlePriceTierChange = (tier) => {
     setPriceTier(tier);
-    if (query.trim()) {
+    // Auto-run search again if there's a query
+    if (query.trim() || advancedMode) {
       runSearch(query, INITIAL_TOP_K, false, tier);
     }
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    if (!query.trim() && !advancedMode) return;
     runSearch(query, INITIAL_TOP_K, false, priceTier);
   };
 
@@ -120,39 +125,9 @@ export default function SearchApp() {
 
       {/* Price Tier Selection Buttons */}
       <div className="flex justify-center gap-3 mb-6">
-        <button
-          type="button"
-          onClick={() => handlePriceTierChange('all')}
-          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider rounded-lg border transition-all duration-200 ${
-            priceTier === 'all'
-              ? 'bg-accentPrimary text-bgSurface font-bold border-accentPrimary shadow-lg'
-              : 'bg-bgSurface text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-textPrimary'
-          }`}
-        >
-          All Prices
-        </button>
-        <button
-          type="button"
-          onClick={() => handlePriceTierChange('cheaper')}
-          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider rounded-lg border transition-all duration-200 ${
-            priceTier === 'cheaper'
-              ? 'bg-accentPrimary text-bgSurface font-bold border-accentPrimary shadow-lg'
-              : 'bg-bgSurface text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-textPrimary'
-          }`}
-        >
-          Cheaper (&lt; $500)
-        </button>
-        <button
-          type="button"
-          onClick={() => handlePriceTierChange('costlier')}
-          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider rounded-lg border transition-all duration-200 ${
-            priceTier === 'costlier'
-              ? 'bg-accentPrimary text-bgSurface font-bold border-accentPrimary shadow-lg'
-              : 'bg-bgSurface text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-textPrimary'
-          }`}
-        >
-          Costlier (&ge; $500)
-        </button>
+        <PriceTierButton tier="all" label="All Prices" currentTier={priceTier} onChange={handlePriceTierChange} />
+        <PriceTierButton tier="cheaper" label="Cheaper (< $500)" currentTier={priceTier} onChange={handlePriceTierChange} />
+        <PriceTierButton tier="costlier" label="Costlier (≥ $500)" currentTier={priceTier} onChange={handlePriceTierChange} />
       </div>
 
       {/* Search Bar */}
@@ -194,44 +169,13 @@ export default function SearchApp() {
 
       {/* Advanced EQ Sliders */}
       {advancedMode && (
-        <div className="max-w-4xl mx-auto mb-12 p-8 bg-bgSurface border border-bgBorder rounded-xl shadow-2xl">
-          <div className="text-center mb-8 text-sm text-textMuted font-mono">
-            Manually draw your exact acoustic target profile in decibels (dB). <br/>
-            <span className="text-accentSecondary text-xs">Note: Semantic text search is bypassed when using this mode.</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-y-12 gap-x-6">
-            {Object.keys(exactFeatures).map((key) => (
-              <div key={key} className="flex flex-col items-center">
-                <label className="text-xs font-mono text-accentPrimary uppercase tracking-widest mb-4 h-8 text-center flex items-center">
-                  {key.replace(/_/g, ' ')}
-                </label>
-                <div className="h-40 flex items-center justify-center">
-                  <input 
-                    type="range"
-                    min={key.includes('sibilance') ? "0" : "-10"} 
-                    max="10" 
-                    step="0.5"
-                    value={exactFeatures[key]}
-                    onChange={(e) => setExactFeatures({...exactFeatures, [key]: parseFloat(e.target.value)})}
-                    className="w-40 -rotate-90 appearance-none bg-bgBorder h-2 rounded-full outline-none cursor-pointer accent-[#C19B76]"
-                  />
-                </div>
-                <div className="text-xs font-mono text-textPrimary mt-4 bg-bgBackground px-3 py-1 rounded-md border border-bgBorder">
-                  {exactFeatures[key] > 0 ? '+' : ''}{exactFeatures[key].toFixed(1)}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 flex justify-center">
-            <button
-              onClick={() => runSearch(query)}
-              disabled={loading}
-              className="px-8 py-3 bg-gradient-to-r from-accentSecondary to-accentPrimary text-bgBackground font-bold font-mono uppercase tracking-wider rounded-lg shadow-lg hover:shadow-accentPrimary/50 transition-all duration-300 disabled:opacity-50"
-            >
-              {loading ? 'Calculating Matches...' : 'Find Matches'}
-            </button>
-          </div>
-        </div>
+        <EqSliderGrid 
+          exactFeatures={exactFeatures} 
+          setExactFeatures={setExactFeatures} 
+          runSearch={runSearch} 
+          loading={loading} 
+          query={query} 
+        />
       )}
 
       {/* Quick Search Feature Suggestions */}

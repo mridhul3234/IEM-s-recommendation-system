@@ -54,23 +54,23 @@ export default function ResultCard({ result, rank, isCompared, onToggleCompare }
       </div>
 
       {/* Right Column: High Fidelity FR Oscilloscope Chart */}
-      <div className="w-full md:w-80 flex flex-col justify-center">
+      <div className="w-full md:w-80 flex flex-col justify-center items-end gap-4">
         <MiniChart features={result.features} targetFeatures={result.target_features} />
+        
+        {/* Compare Button (Moved below graph) */}
+        {onToggleCompare && (
+          <button
+            onClick={() => onToggleCompare(result.name)}
+            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider rounded border transition-all duration-200 ${
+              isCompared
+                ? 'bg-accentPrimary/20 text-accentPrimary border-accentPrimary/50'
+                : 'bg-transparent text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-accentPrimary'
+            }`}
+          >
+            {isCompared ? 'Added to Compare' : '+ Compare'}
+          </button>
+        )}
       </div>
-
-      {/* Compare Button (Bottom Right) */}
-      {onToggleCompare && (
-        <button
-          onClick={onToggleCompare}
-          className={`absolute bottom-6 right-6 px-4 py-2 font-mono text-xs uppercase tracking-wider rounded border transition-all duration-200 ${
-            isCompared
-              ? 'bg-accentPrimary/20 text-accentPrimary border-accentPrimary/50'
-              : 'bg-transparent text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-accentPrimary'
-          }`}
-        >
-          {isCompared ? 'Added to Compare' : '+ Compare'}
-        </button>
-      )}
 
     </div>
   );

@@ -49,19 +49,8 @@ If a trait is unmentioned, default to 0.0.
 Respond strictly as a JSON object with the numerical float values. Do not include markdown formatting or backticks around the JSON.
 """
 
-def infer_target_profile(query: str) -> dict[str, float]:
-    """Infers the acoustic profile from a user query."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    default_profile = {
-        "sub_bass": 0.0, "bass": 0.0, "low_mids": 0.0, "mids": 0.0,
-        "presence": 0.0, "treble": 0.0, "air": 0.0,
-        "sibilance_risk": 0.0, "tonal_tilt": 0.0, "bass_to_treble": 0.0
-    }
-    
-    if not api_key:
-        print("Warning: GEMINI_API_KEY environment variable is missing. Defaulting to neutral profile.")
-        return default_profile
-
+def call_gemini_api(prompt: str, api_key: str) -> str:
+    """Attempts to call the Gemini API with a retry loop over different models."""
     models_to_try = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-flash-latest']
     client = genai.Client(api_key=api_key)
 
@@ -69,32 +58,61 @@ def infer_target_profile(query: str) -> dict[str, float]:
         try:
             response = client.models.generate_content(
                 model=model,
-                contents=PROMPT.format(query=query),
+                contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=TargetProfile,
                     temperature=0.0
                 )
             )
-            return json.loads(response.text)
+            return response.text
         except Exception as e:
             print(f"Warning: Gemini API call failed with model {model}: {e}")
             continue
+    raise Exception("All Gemini models failed")
 
-    # Ollama Fallback
-    print("Warning: All Gemini API model attempts failed or timed out. Attempting Local Ollama Fallback...")
+def call_ollama_fallback(prompt: str) -> str:
+    """Attempts to call a local Ollama server running Llama 3."""
     import requests
+    payload = {
+        "model": "llama3",
+        "prompt": prompt,
+        "format": "json",
+        "stream": False
+    }
+    res = requests.post("http://localhost:11434/api/generate", json=payload, timeout=15)
+    if res.status_code == 200:
+        data = res.json()
+        return data.get("response", "{}")
+    raise Exception(f"Ollama returned status code {res.status_code}")
+
+def parse_acoustic_json(json_str: str) -> dict[str, float]:
+    """Parses JSON text safely into a dictionary."""
+    return json.loads(json_str)
+
+def infer_target_profile(query: str) -> dict[str, float]:
+    """Infers the acoustic profile from a user query by orchestrating API calls."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    default_profile = {
+        "sub_bass": 0.0, "bass": 0.0, "low_mids": 0.0, "mids": 0.0,
+        "presence": 0.0, "treble": 0.0, "air": 0.0,
+        "sibilance_risk": 0.0, "tonal_tilt": 0.0, "bass_to_treble": 0.0
+    }
+    
+    prompt = PROMPT.format(query=query)
+
+    if api_key:
+        try:
+            result_str = call_gemini_api(prompt, api_key)
+            return parse_acoustic_json(result_str)
+        except Exception:
+            print("Warning: All Gemini API model attempts failed or timed out. Attempting Local Ollama Fallback...")
+    else:
+        print("Warning: GEMINI_API_KEY environment variable is missing. Attempting Local Ollama Fallback...")
+
     try:
-        payload = {
-            "model": "llama3",
-            "prompt": PROMPT.format(query=query),
-            "format": "json",
-            "stream": False
-        }
-        res = requests.post("http://localhost:11434/api/generate", json=payload, timeout=15)
-        if res.status_code == 200:
-            data = res.json()
-            return json.loads(data.get("response", "{}"))
+        result_str = call_ollama_fallback(prompt)
+        return parse_acoustic_json(result_str)
     except Exception as e:
         print(f"Local Ollama fallback failed: {e}")
 
