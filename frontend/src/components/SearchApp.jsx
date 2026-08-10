@@ -338,14 +338,14 @@ export default function SearchApp() {
         </div>
       </div>
 
-      {/* Search Results Section - Translucent Glass */}
+      {/* Search Results Section - Transparent Outer Section */}
       <AnimatePresence>
         {(results.length > 0 || error || loading) && (
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="w-full bg-[#0F141C]/40 backdrop-blur-2xl relative z-10 px-6 md:px-12 py-16 border-t border-white/10"
+            className="w-full bg-transparent relative z-10 px-6 md:px-12 py-16"
           >
             <div className="max-w-[1200px] mx-auto">
               
@@ -442,21 +442,21 @@ export default function SearchApp() {
         </div>
       </section>
 
-      {/* How It Works Section - Translucent Glass */}
-      <section id="how-it-works" className="w-full bg-[#0F141C]/30 backdrop-blur-2xl border-t border-white/10 px-6 md:px-12 py-24 relative z-10">
+      {/* How It Works Section - Transparent Outer Section */}
+      <section id="how-it-works" className="w-full bg-transparent px-6 md:px-12 py-20 relative z-10">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-3">Engine Architecture</span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-textPrimary tracking-tight mb-4">
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-textPrimary tracking-tight mb-4 drop-shadow-lg">
               AI-Powered Acoustic Search Engine
             </h2>
-            <p className="font-body text-textMuted text-base md:text-lg leading-relaxed">
+            <p className="font-body text-textMuted text-base md:text-lg leading-relaxed drop-shadow">
               AcousticSearch bridges natural language queries with physical IEM frequency response curves using Google Gemini, high-dimensional vector space, and hybrid math.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-black/30 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+            <div className="bg-[#0F141C]/70 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
               <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
                 <Cpu size={28} weight="bold" />
               </div>
@@ -466,7 +466,7 @@ export default function SearchApp() {
               </p>
             </div>
 
-            <div className="bg-black/30 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+            <div className="bg-[#0F141C]/70 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
               <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
                 <Target size={28} weight="bold" />
               </div>
@@ -476,7 +476,7 @@ export default function SearchApp() {
               </p>
             </div>
 
-            <div className="bg-black/30 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+            <div className="bg-[#0F141C]/70 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
               <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
                 <Waves size={28} weight="bold" />
               </div>
@@ -489,15 +489,15 @@ export default function SearchApp() {
         </div>
       </section>
 
-      {/* FAQs Section - Translucent Glass */}
-      <section id="faq" className="w-full bg-[#0F141C]/40 backdrop-blur-2xl border-t border-white/10 px-6 md:px-12 py-24 relative z-10">
+      {/* FAQs Section - Transparent Outer Section */}
+      <section id="faq" className="w-full bg-transparent px-6 md:px-12 py-20 relative z-10">
         <div className="max-w-[1000px] mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-3">Got Questions?</span>
-            <h2 className="font-display text-4xl font-bold text-textPrimary tracking-tight mb-4">
+            <h2 className="font-display text-4xl font-bold text-textPrimary tracking-tight mb-4 drop-shadow-lg">
               Frequently Asked Questions
             </h2>
-            <p className="font-body text-textMuted text-base">
+            <p className="font-body text-textMuted text-base drop-shadow">
               Everything you need to know about AcousticSearch, sound matching, and frequency response curves.
             </p>
           </div>
