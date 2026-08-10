@@ -1,11 +1,11 @@
 import React from 'react';
-import { Globe, ArrowLeft, Headphones, Equalizer, Lightning, ShieldCheck, Sparkle } from '@phosphor-icons/react';
+import { Globe, Headphones, Equalizer, Lightning, ShieldCheck, Sparkle, ArrowsLeftRight } from '@phosphor-icons/react';
 
 export default function AboutApp() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary">
       
-      {/* Sticky Navbar */}
+      {/* Identical Sticky Navbar */}
       <nav className="sticky top-0 flex items-center justify-between py-4 px-6 md:px-12 border-b border-white/5 bg-bgBase/80 backdrop-blur-xl z-50">
         <div className="flex items-center gap-2">
           <a href="/" className="font-display font-bold text-2xl tracking-tight text-textPrimary hover:opacity-90 transition-opacity">
@@ -13,19 +13,19 @@ export default function AboutApp() {
           </a>
         </div>
         <div className="hidden md:flex items-center gap-10 text-sm font-medium text-textMuted">
-          <a href="/" className="hover:text-textPrimary transition-colors">Discover</a>
-          <a href="#" className="hover:text-textPrimary transition-colors">Support</a>
+          <a href="/#how-it-works" className="hover:text-textPrimary transition-colors">How It Works</a>
+          <a href="/#faq" className="hover:text-textPrimary transition-colors">FAQ</a>
           <a href="/about" className="text-accentPrimary font-semibold transition-colors">About IEMs</a>
         </div>
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-6">
           <button className="hidden md:flex items-center gap-2 text-sm text-textPrimary font-medium opacity-80 hover:opacity-100 transition-opacity">
             <Globe weight="bold" size={18} /> Language
           </button>
           <a 
             href="/"
-            className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-accentPrimary text-textPrimary px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all"
+            className="bg-accentPrimary text-bgBase px-6 py-2.5 rounded-full text-sm font-bold tracking-wide hover:brightness-110 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] flex items-center gap-2"
           >
-            <ArrowLeft size={16} weight="bold" /> Back to Engine
+            <ArrowsLeftRight size={18} weight="bold" /> Compare
           </a>
         </div>
       </nav>
@@ -164,6 +164,44 @@ export default function AboutApp() {
         </div>
 
       </main>
+
+      {/* Footer */}
+      <footer className="w-full bg-black/40 border-t border-white/10 px-6 md:px-12 py-16 relative z-10 text-textMuted">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+          <div className="md:col-span-2">
+            <a href="/" className="font-display font-bold text-2xl tracking-tight text-textPrimary block mb-4">
+              Acoustic<span className="text-accentPrimary">Search.</span>
+            </a>
+            <p className="font-body text-sm text-textMuted max-w-sm leading-relaxed mb-6">
+              AI-powered In-Ear Monitor recommendation engine combining natural language processing, vector embeddings, and acoustic curve math.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="font-mono text-xs text-textPrimary uppercase tracking-widest mb-4">Navigation</h4>
+            <ul className="space-y-2.5 text-sm">
+              <li><a href="/" className="hover:text-accentPrimary transition-colors">Search Engine</a></li>
+              <li><a href="/#how-it-works" className="hover:text-accentPrimary transition-colors">How It Works</a></li>
+              <li><a href="/#faq" className="hover:text-accentPrimary transition-colors">FAQs</a></li>
+              <li><a href="/about" className="hover:text-accentPrimary transition-colors">About IEMs</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-mono text-xs text-textPrimary uppercase tracking-widest mb-4">Acoustic Traits</h4>
+            <div className="flex flex-wrap gap-1.5 text-xs font-mono">
+              <span className="px-2 py-1 bg-white/5 rounded text-textMuted">Sub-bass</span>
+              <span className="px-2 py-1 bg-white/5 rounded text-textMuted">Warm Mids</span>
+              <span className="px-2 py-1 bg-white/5 rounded text-textMuted">Airy Treble</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-[1400px] mx-auto border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono">
+          <p>© {new Date().getFullYear()} AcousticSearch. All rights reserved.</p>
+          <p className="text-textMuted/60">Crafted for Audiophiles & Music Enthusiasts</p>
+        </div>
+      </footer>
 
     </div>
   );

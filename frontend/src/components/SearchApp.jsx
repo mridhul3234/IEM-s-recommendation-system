@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, Check, WarningCircle } from '@phosphor-icons/react';
+import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, WarningCircle, SlidersHorizontal } from '@phosphor-icons/react';
 import ResultCard from './ResultCard';
 import EqSliderGrid from './EqSliderGrid';
 
@@ -17,8 +17,8 @@ const FAQ_ITEMS = [
     a: "Semantic NLP measures how closely an IEM's sound signature description matches the text query you typed. Acoustic Math calculates the exact Euclidean distance between your desired acoustic target values (sub-bass, presence, air, etc.) and the IEM's measured frequency response properties."
   },
   {
-    q: "How does the Advanced Acoustic EQ toggle work?",
-    a: "Advanced EQ bypasses text parsing completely. It exposes 10 individual acoustic trait sliders (sub-bass, bass, presence, treble, air, tonal tilt, sibilance risk), allowing you to manually configure your exact target sound signature and query the database directly."
+    q: "How does the Advanced Acoustic EQ sliders work?",
+    a: "Advanced EQ gives you direct 10-band slider control over sub-bass, bass, presence, treble, air, tonal tilt, and sibilance risk. You can manually configure your exact target sound signature and query the database directly."
   },
   {
     q: "Is the frequency response data accurate?",
@@ -72,7 +72,6 @@ export default function SearchApp() {
   };
 
   const [query, setQuery] = useState('');
-  const [advancedMode, setAdvancedMode] = useState(false);
   const [exactFeatures, setExactFeatures] = useState(DEFAULT_EXACT_FEATURES);
   const [priceTier, setPriceTier] = useState('all'); 
   const [results, setResults] = useState([]);
@@ -85,9 +84,9 @@ export default function SearchApp() {
   const [compareCart, setCompareCart] = useState([]);
   const [compareNotice, setCompareNotice] = useState(null);
 
-  const runSearch = async (searchQuery, targetTopK = INITIAL_TOP_K, isLoadMore = false, selectedPriceTier = priceTier) => {
+  const runSearch = async (searchQuery, targetTopK = INITIAL_TOP_K, isLoadMore = false, selectedPriceTier = priceTier, isEqMode = false) => {
     const q = searchQuery.trim();
-    if (!q && !advancedMode) return;
+    if (!q && !isEqMode) return;
 
     if (isLoadMore) {
       setLoadingMore(true);
@@ -100,7 +99,7 @@ export default function SearchApp() {
     try {
       const ts = Date.now();
       let url = `http://localhost:8000/search?top_k=${targetTopK}&price_tier=${selectedPriceTier}&_t=${ts}`;
-      if (advancedMode) {
+      if (isEqMode) {
         url += `&q=${encodeURIComponent(q || "")}&exact_features=${encodeURIComponent(JSON.stringify(exactFeatures))}`;
       } else {
         url += `&q=${encodeURIComponent(q)}`;
@@ -128,14 +127,14 @@ export default function SearchApp() {
 
   const handlePriceTierChange = (tier) => {
     setPriceTier(tier);
-    if (query.trim() || advancedMode) {
+    if (query.trim()) {
       runSearch(query, INITIAL_TOP_K, false, tier);
     }
   };
 
   const handleFormSubmit = (e) => {
     e?.preventDefault();
-    if (!query.trim() && !advancedMode) return;
+    if (!query.trim()) return;
     runSearch(query, INITIAL_TOP_K, false, priceTier);
   };
 
@@ -163,6 +162,10 @@ export default function SearchApp() {
     }
   };
 
+  const scrollToAdvancedEq = () => {
+    document.getElementById('advanced-eq')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary">
       
@@ -174,9 +177,10 @@ export default function SearchApp() {
           </a>
         </div>
         
-        {/* Header Links - Discover removed */}
+        {/* Header Links */}
         <div className="hidden md:flex items-center gap-10 text-sm font-medium text-textMuted">
           <a href="#how-it-works" className="hover:text-textPrimary transition-colors">How It Works</a>
+          <a href="#advanced-eq" className="hover:text-textPrimary transition-colors">Advanced EQ</a>
           <a href="#faq" className="hover:text-textPrimary transition-colors">FAQ</a>
           <a href="/about" className="hover:text-textPrimary transition-colors">About IEMs</a>
         </div>
@@ -220,7 +224,7 @@ export default function SearchApp() {
       </AnimatePresence>
 
       {/* Fullscreen Hero Section */}
-      <div className="flex-1 flex flex-col relative z-20 w-full min-h-[calc(100vh-80px)] justify-between pt-12 md:pt-20 pb-48 overflow-hidden">
+      <div className="relative z-20 w-full min-h-[calc(100vh-80px)] flex flex-col justify-between pt-12 md:pt-20 pb-16 overflow-hidden">
         
         {/* Fullscreen Background Image with Dark Vignette */}
         <div className="absolute inset-0 z-0">
@@ -230,7 +234,7 @@ export default function SearchApp() {
             className="w-full h-full object-cover object-center scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-bgBase via-bgBase/80 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-bgBase via-transparent to-bgBase/60"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-bgBase via-transparent to-bgBase/70"></div>
         </div>
 
         {/* Hero Content */}
@@ -246,11 +250,11 @@ export default function SearchApp() {
           </div>
         </div>
 
-        {/* Floating Glassmorphism Search Bar */}
-        <div className="absolute bottom-[-4rem] left-6 right-6 md:left-12 md:right-12 z-40 max-w-[1500px] mx-auto">
+        {/* Integrated Floating Glassmorphism Search Bar - Non-colliding */}
+        <div className="relative z-30 max-w-[1500px] w-full mx-auto px-6 md:px-12 mt-12">
           <div className="backdrop-blur-2xl bg-white/[0.03] border border-white/10 p-5 md:p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
             
-            {/* Tabs with smooth motion physics */}
+            {/* Tabs */}
             <div className="flex items-center gap-2 mb-6">
               <motion.button 
                 whileHover={{ scale: 1.04 }}
@@ -286,29 +290,32 @@ export default function SearchApp() {
                 <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1">Target Sound</label>
                 <input 
                   type="text" 
-                  placeholder={advancedMode ? "Text search disabled in Advanced Mode" : "e.g. 'Very bassy but minimal treble'"}
-                  className="w-full bg-transparent text-textPrimary font-body font-medium text-lg outline-none placeholder-textPrimary/30 px-1 disabled:opacity-50"
+                  placeholder="e.g. 'Very bassy but minimal treble'"
+                  className="w-full bg-transparent text-textPrimary font-body font-medium text-lg outline-none placeholder-textPrimary/30 px-1"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  disabled={advancedMode}
                 />
               </div>
 
-              {/* Advanced EQ Toggle Button with Spring Motion */}
+              {/* Advanced EQ Scroll Button */}
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.96 }}
                 type="button"
-                onClick={() => setAdvancedMode(!advancedMode)}
-                className={`text-left bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col min-w-[220px] transition-colors cursor-pointer ${advancedMode ? 'border-accentPrimary/50 bg-accentPrimary/5' : 'hover:bg-white/10'}`}
+                onClick={scrollToAdvancedEq}
+                className="text-left bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col min-w-[220px] transition-colors cursor-pointer hover:bg-white/10 hover:border-accentPrimary/40 group"
               >
-                <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1 cursor-pointer">Advanced EQ</label>
-                <div className="text-textPrimary font-body font-medium text-lg px-1 mt-0.5">
-                  {advancedMode ? 'Active / Configured' : 'Configure Sliders'}
+                <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1 cursor-pointer flex items-center justify-between">
+                  <span>Advanced EQ</span>
+                  <SlidersHorizontal size={12} className="text-accentPrimary" />
+                </label>
+                <div className="text-textPrimary font-body font-medium text-lg px-1 mt-0.5 group-hover:text-accentPrimary transition-colors flex items-center gap-2">
+                  <span>Tune Sliders</span>
+                  <span className="text-xs text-accentPrimary">↓</span>
                 </div>
               </motion.button>
 
-              {/* Search Submit Button with Motion Physics */}
+              {/* Search Submit Button */}
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.92 }}
@@ -327,34 +334,20 @@ export default function SearchApp() {
         </div>
       </div>
 
-      {/* Results & Advanced Mode Content */}
+      {/* Search Results Section */}
       <AnimatePresence>
-        {(advancedMode || results.length > 0 || error) && (
+        {(results.length > 0 || error || loading) && (
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="w-full bg-bgBase relative z-10 px-6 md:px-12 pt-32 pb-12 mt-8 border-t border-white/5"
+            className="w-full bg-bgBase relative z-10 px-6 md:px-12 py-16 border-t border-white/5"
           >
             <div className="max-w-[1200px] mx-auto">
               
-              {/* Advanced EQ Sliders */}
-              {advancedMode && (
-                <div className="mb-16">
-                  <h2 className="font-mono text-sm text-accentPrimary uppercase tracking-widest mb-6">Advanced Acoustic Configuration</h2>
-                  <EqSliderGrid 
-                    exactFeatures={exactFeatures} 
-                    setExactFeatures={setExactFeatures} 
-                    runSearch={runSearch} 
-                    loading={loading} 
-                    query={query} 
-                  />
-                </div>
-              )}
-
               {error && <div className="text-red-400 font-mono mb-8 p-4 bg-red-500/10 rounded-xl border border-red-500/20">{error}</div>}
 
-              {/* Results */}
+              {/* Results Grid */}
               {results.length > 0 && (
                 <div className="space-y-16">
                   
@@ -422,35 +415,28 @@ export default function SearchApp() {
         )}
       </AnimatePresence>
 
-      {/* Floating Compare Action Drawer at Bottom */}
-      <AnimatePresence>
-        {compareCart.length > 0 && (
-          <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 25 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#0B0F15]/90 backdrop-blur-2xl border border-accentPrimary/50 shadow-[0_20px_50px_rgba(255,138,76,0.3)] rounded-full px-8 py-4 flex items-center gap-6 z-50"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-accentPrimary animate-pulse"></div>
-              <span className="font-mono text-xs text-textPrimary uppercase tracking-widest font-semibold">
-                {compareCart.length} {compareCart.length === 1 ? 'IEM' : 'IEMs'} Selected
-              </span>
-            </div>
+      {/* Always Visible Advanced Acoustic EQ Sliders Section */}
+      <section id="advanced-eq" className="w-full bg-bgBase border-t border-white/5 px-6 md:px-12 py-24 relative z-10">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="mb-10">
+            <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-2">Manual Tuning</span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-textPrimary tracking-tight mb-3">
+              Advanced Acoustic Configuration
+            </h2>
+            <p className="font-body text-textMuted text-base max-w-2xl">
+              Adjust individual frequency band sliders (sub-bass, presence, air, tonal tilt) to search for custom acoustic profiles directly.
+            </p>
+          </div>
 
-            <motion.button 
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.94 }}
-              onClick={handleNavCompareClick}
-              className="px-6 py-2.5 bg-accentPrimary text-bgBase rounded-full font-mono text-xs uppercase tracking-wider font-bold hover:brightness-110 transition-all shadow-lg cursor-pointer flex items-center gap-2"
-            >
-              <ArrowsLeftRight size={16} weight="bold" />
-              Compare Now
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <EqSliderGrid 
+            exactFeatures={exactFeatures} 
+            setExactFeatures={setExactFeatures} 
+            runSearch={(q, topK, isMore, pTier) => runSearch(q, topK, isMore, pTier, true)} 
+            loading={loading} 
+            query={query} 
+          />
+        </div>
+      </section>
 
       {/* How It Works & Engine Architecture Section */}
       <section id="how-it-works" className="w-full bg-bgBase/95 border-t border-white/5 px-6 md:px-12 py-24 relative z-10">
@@ -520,6 +506,36 @@ export default function SearchApp() {
         </div>
       </section>
 
+      {/* Floating Compare Action Drawer at Bottom */}
+      <AnimatePresence>
+        {compareCart.length > 0 && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 25 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#0B0F15]/90 backdrop-blur-2xl border border-accentPrimary/50 shadow-[0_20px_50px_rgba(255,138,76,0.3)] rounded-full px-8 py-4 flex items-center gap-6 z-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-accentPrimary animate-pulse"></div>
+              <span className="font-mono text-xs text-textPrimary uppercase tracking-widest font-semibold">
+                {compareCart.length} {compareCart.length === 1 ? 'IEM' : 'IEMs'} Selected
+              </span>
+            </div>
+
+            <motion.button 
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={handleNavCompareClick}
+              className="px-6 py-2.5 bg-accentPrimary text-bgBase rounded-full font-mono text-xs uppercase tracking-wider font-bold hover:brightness-110 transition-all shadow-lg cursor-pointer flex items-center gap-2"
+            >
+              <ArrowsLeftRight size={16} weight="bold" />
+              Compare Now
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer */}
       <footer className="w-full bg-black/40 border-t border-white/10 px-6 md:px-12 py-16 relative z-10 text-textMuted">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
@@ -543,6 +559,7 @@ export default function SearchApp() {
             <ul className="space-y-2.5 text-sm">
               <li><a href="/" className="hover:text-accentPrimary transition-colors">Search Engine</a></li>
               <li><a href="#how-it-works" className="hover:text-accentPrimary transition-colors">How It Works</a></li>
+              <li><a href="#advanced-eq" className="hover:text-accentPrimary transition-colors">Advanced EQ</a></li>
               <li><a href="#faq" className="hover:text-accentPrimary transition-colors">FAQs</a></li>
               <li><a href="/about" className="hover:text-accentPrimary transition-colors">About IEMs</a></li>
             </ul>
