@@ -1,11 +1,67 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MagnifyingGlass, Globe } from '@phosphor-icons/react';
+import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown } from '@phosphor-icons/react';
 import ResultCard from './ResultCard';
 import EqSliderGrid from './EqSliderGrid';
 
 const INITIAL_TOP_K = 3;
 const STEP_TOP_K = 3;
+
+const FAQ_ITEMS = [
+  {
+    q: "What makes AcousticSearch different from regular headphone recommendation sites?",
+    a: "Unlike static buyer's guides or generic review aggregators, AcousticSearch utilizes AI natural language processing (Google Gemini) and vector similarity math over actual measured frequency response (FR) curves. It extracts your target tonal preferences and matches them mathematically against physical IEM acoustic profiles."
+  },
+  {
+    q: "What is the difference between Semantic NLP Match and Acoustic Math Match?",
+    a: "Semantic NLP measures how closely an IEM's sound signature description matches the text query you typed. Acoustic Math calculates the exact Euclidean distance between your desired acoustic target values (sub-bass, presence, air, etc.) and the IEM's measured frequency response properties."
+  },
+  {
+    q: "How does the Advanced Acoustic EQ toggle work?",
+    a: "Advanced EQ bypasses text parsing completely. It exposes 10 individual acoustic trait sliders (sub-bass, bass, presence, treble, air, tonal tilt, sibilance risk), allowing you to manually configure your exact target sound signature and query the database directly."
+  },
+  {
+    q: "Is the frequency response data accurate?",
+    a: "Yes. All IEM acoustic properties in our database are computed directly from standardized 711 coupler frequency response measurements and normalized acoustic metrics. No data is fabricated."
+  },
+  {
+    q: "How does the IEM comparison feature work?",
+    a: "Click the '+ Compare' button on any recommendation card to add up to 3 IEMs to your comparison drawer. Click 'Compare' in the top right to compare their sound signatures, prices, and acoustic trait distributions side-by-side."
+  }
+];
+
+function FaqAccordionItem({ question, answer }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border border-white/10 rounded-2xl bg-white/[0.02] overflow-hidden transition-colors hover:border-white/20">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-6 text-left flex items-center justify-between gap-4 font-display font-semibold text-lg text-textPrimary cursor-pointer select-none"
+      >
+        <span>{question}</span>
+        <div className={`p-2 rounded-full bg-white/5 text-accentPrimary transition-transform duration-300 ${isOpen ? 'rotate-180 bg-accentPrimary/20' : ''}`}>
+          <CaretDown size={18} weight="bold" />
+        </div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="px-6 pb-6 pt-2 font-body text-textMuted text-base leading-relaxed border-t border-white/5">
+              {answer}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function SearchApp() {
   const DEFAULT_EXACT_FEATURES = {
@@ -17,7 +73,7 @@ export default function SearchApp() {
   const [query, setQuery] = useState('');
   const [advancedMode, setAdvancedMode] = useState(false);
   const [exactFeatures, setExactFeatures] = useState(DEFAULT_EXACT_FEATURES);
-  const [priceTier, setPriceTier] = useState('all'); // 'all', 'cheaper', 'costlier'
+  const [priceTier, setPriceTier] = useState('all'); 
   const [results, setResults] = useState([]);
   const [inferredFeatures, setInferredFeatures] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -95,17 +151,20 @@ export default function SearchApp() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col relative overflow-hidden bg-bgBase">
+    <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary">
       
-      {/* Navbar */}
-      <nav className="flex items-center justify-between py-6 px-6 md:px-12 border-b border-white/5 relative z-30">
+      {/* Sticky Navbar */}
+      <nav className="sticky top-0 flex items-center justify-between py-4 px-6 md:px-12 border-b border-white/5 bg-bgBase/80 backdrop-blur-xl z-50">
         <div className="flex items-center gap-2">
-          <span className="font-display font-bold text-2xl tracking-tight text-textPrimary">Acoustic<span className="text-accentPrimary">Search.</span></span>
+          <a href="/" className="font-display font-bold text-2xl tracking-tight text-textPrimary hover:opacity-90 transition-opacity">
+            Acoustic<span className="text-accentPrimary">Search.</span>
+          </a>
         </div>
         <div className="hidden md:flex items-center gap-10 text-sm font-medium text-textMuted">
-          <a href="#" className="hover:text-textPrimary transition-colors flex items-center gap-1">Discover <span className="text-[9px]">▼</span></a>
-          <a href="#" className="hover:text-textPrimary transition-colors">Support</a>
-          <a href="#" className="hover:text-textPrimary transition-colors">About IEMs</a>
+          <a href="/" className="hover:text-textPrimary transition-colors flex items-center gap-1">Discover <span className="text-[9px]">▼</span></a>
+          <a href="#how-it-works" className="hover:text-textPrimary transition-colors">How It Works</a>
+          <a href="#faq" className="hover:text-textPrimary transition-colors">FAQ</a>
+          <a href="/about" className="hover:text-textPrimary transition-colors">About IEMs</a>
         </div>
         <div className="flex items-center gap-8">
           <button className="hidden md:flex items-center gap-2 text-sm text-textPrimary font-medium opacity-80 hover:opacity-100 transition-opacity">
@@ -126,105 +185,112 @@ export default function SearchApp() {
         </div>
       </nav>
 
-      {/* Hero Section Split Layout */}
-      <div className="flex-1 flex flex-col relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-12 pt-12 md:pt-20 pb-48">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 h-full">
-          {/* Left: Typography */}
-          <div className="flex flex-col justify-center">
-            <h1 className="font-display text-6xl md:text-8xl tracking-tighter leading-[0.95] text-textPrimary mb-6">
+      {/* Fullscreen Hero Section */}
+      <div className="flex-1 flex flex-col relative z-20 w-full min-h-[calc(100vh-80px)] justify-between pt-12 md:pt-20 pb-48 overflow-hidden">
+        
+        {/* Fullscreen Background Image with Dark Vignette */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/right_photo.png" 
+            alt="Hero Background" 
+            className="w-full h-full object-cover object-center scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-bgBase via-bgBase/80 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-bgBase via-transparent to-bgBase/60"></div>
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-12 my-auto">
+          <div className="max-w-2xl">
+            <h1 className="font-display text-6xl md:text-8xl tracking-tighter leading-[0.95] text-textPrimary mb-6 drop-shadow-lg">
               <span className="font-light text-textMuted block mb-2">Discover</span>
               <span className="font-bold">Perfect Audio</span>
             </h1>
-            <p className="font-body text-textMuted text-lg md:text-xl max-w-md leading-relaxed">
+            <p className="font-body text-textMuted text-lg md:text-xl max-w-md leading-relaxed drop-shadow">
               Find and compare your exact acoustic target.
             </p>
           </div>
-          
-          {/* Right: Empty Area for IEM Photo */}
-          <div className="hidden md:flex relative min-h-[400px] items-center justify-center">
-             {/* Intentionally left blank for the IEM photo as requested */}
-          </div>
         </div>
-      </div>
 
-      {/* Floating Glassmorphism Search Bar */}
-      <div className="absolute bottom-10 left-6 right-6 md:left-12 md:right-12 z-40 max-w-[1500px] mx-auto">
-        <div className="backdrop-blur-2xl bg-white/[0.03] border border-white/10 p-5 md:p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
-          
-          {/* Tabs */}
-          <div className="flex items-center gap-2 mb-6">
-            <button 
-              onClick={() => handlePriceTierChange('all')}
-              className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'all' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
-            >
-              All Prices
-            </button>
-            <button 
-              onClick={() => handlePriceTierChange('cheaper')}
-              className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'cheaper' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
-            >
-              Under $500
-            </button>
-            <button 
-              onClick={() => handlePriceTierChange('costlier')}
-              className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'costlier' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
-            >
-              $500+
-            </button>
-          </div>
-
-          {/* Inputs */}
-          <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+        {/* Floating Glassmorphism Search Bar */}
+        <div className="absolute bottom-[-4rem] left-6 right-6 md:left-12 md:right-12 z-40 max-w-[1500px] mx-auto">
+          <div className="backdrop-blur-2xl bg-white/[0.03] border border-white/10 p-5 md:p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
             
-            {/* Target Query */}
-            <div className="flex-1 bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col focus-within:border-accentPrimary/50 focus-within:bg-white/10 transition-colors">
-              <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1">Target Sound</label>
-              <input 
-                type="text" 
-                placeholder={advancedMode ? "Text search disabled in Advanced Mode" : "e.g. 'Very bassy but minimal treble'"}
-                className="w-full bg-transparent text-textPrimary font-body font-medium text-lg outline-none placeholder-textPrimary/30 px-1 disabled:opacity-50"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                disabled={advancedMode}
-              />
+            {/* Tabs */}
+            <div className="flex items-center gap-2 mb-6">
+              <button 
+                onClick={() => handlePriceTierChange('all')}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'all' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+              >
+                All Prices
+              </button>
+              <button 
+                onClick={() => handlePriceTierChange('cheaper')}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'cheaper' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+              >
+                Under $500
+              </button>
+              <button 
+                onClick={() => handlePriceTierChange('costlier')}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'costlier' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+              >
+                $500+
+              </button>
             </div>
 
-            {/* Advanced EQ Toggle */}
-            <button 
-              type="button"
-              onClick={() => setAdvancedMode(!advancedMode)}
-              className={`text-left bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col min-w-[220px] transition-colors ${advancedMode ? 'border-accentPrimary/50 bg-accentPrimary/5' : 'hover:bg-white/10'}`}
-            >
-              <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1 cursor-pointer">Advanced EQ</label>
-              <div className="text-textPrimary font-body font-medium text-lg px-1 mt-0.5">
-                {advancedMode ? 'Active / Configured' : 'Configure Sliders'}
+            {/* Inputs */}
+            <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+              
+              {/* Target Query */}
+              <div className="flex-1 bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col focus-within:border-accentPrimary/50 focus-within:bg-white/10 transition-colors">
+                <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1">Target Sound</label>
+                <input 
+                  type="text" 
+                  placeholder={advancedMode ? "Text search disabled in Advanced Mode" : "e.g. 'Very bassy but minimal treble'"}
+                  className="w-full bg-transparent text-textPrimary font-body font-medium text-lg outline-none placeholder-textPrimary/30 px-1 disabled:opacity-50"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  disabled={advancedMode}
+                />
               </div>
-            </button>
 
-            {/* Submit Button */}
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full md:w-[76px] h-[76px] shrink-0 bg-accentPrimary rounded-[1.25rem] flex items-center justify-center text-bgBase hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <div className="w-7 h-7 border-2 border-bgBase border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <MagnifyingGlass size={32} weight="bold" />
-              )}
-            </button>
-          </form>
+              {/* Advanced EQ Toggle */}
+              <button 
+                type="button"
+                onClick={() => setAdvancedMode(!advancedMode)}
+                className={`text-left bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col min-w-[220px] transition-colors ${advancedMode ? 'border-accentPrimary/50 bg-accentPrimary/5' : 'hover:bg-white/10'}`}
+              >
+                <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1 cursor-pointer">Advanced EQ</label>
+                <div className="text-textPrimary font-body font-medium text-lg px-1 mt-0.5">
+                  {advancedMode ? 'Active / Configured' : 'Configure Sliders'}
+                </div>
+              </button>
+
+              {/* Submit Button */}
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full md:w-[76px] h-[76px] shrink-0 bg-accentPrimary rounded-[1.25rem] flex items-center justify-center text-bgBase hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <div className="w-7 h-7 border-2 border-bgBase border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <MagnifyingGlass size={32} weight="bold" />
+                )}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
-      {/* Results & Advanced Mode Content (Appears below the fold) */}
+      {/* Results & Advanced Mode Content */}
       <AnimatePresence>
         {(advancedMode || results.length > 0 || error) && (
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="w-full bg-bgBase relative z-10 px-6 md:px-12 py-12 border-t border-white/5"
+            className="w-full bg-bgBase relative z-10 px-6 md:px-12 pt-32 pb-12 mt-8 border-t border-white/5"
           >
             <div className="max-w-[1200px] mx-auto">
               
@@ -309,7 +375,121 @@ export default function SearchApp() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* How It Works & Engine Architecture Section */}
+      <section id="how-it-works" className="w-full bg-bgBase/95 border-t border-white/5 px-6 md:px-12 py-24 relative z-10">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-3">Engine Architecture</span>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-textPrimary tracking-tight mb-4">
+              AI-Powered Acoustic Search Engine
+            </h2>
+            <p className="font-body text-textMuted text-base md:text-lg leading-relaxed">
+              AcousticSearch bridges natural language queries with physical IEM frequency response curves using Google Gemini, high-dimensional vector space, and hybrid math.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+              <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
+                <Cpu size={28} weight="bold" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-textPrimary mb-3">1. Target Extraction</h3>
+              <p className="font-body text-textMuted text-sm leading-relaxed">
+                Google Gemini translates your sound description into a 10-dimensional acoustic feature profile (sub-bass, mids, treble, air, tonal tilt, sibilance risk).
+              </p>
+            </div>
+
+            <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+              <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
+                <Target size={28} weight="bold" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-textPrimary mb-3">2. Vector Search</h3>
+              <p className="font-body text-textMuted text-sm leading-relaxed">
+                Dense 384-dimensionalMiniLM embeddings perform cosine similarity searches over Supabase <code className="font-mono text-accentPrimary text-xs">pgvector</code> datasets of measured IEMs.
+              </p>
+            </div>
+
+            <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+              <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
+                <Waves size={28} weight="bold" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-textPrimary mb-3">3. Hybrid Reranking</h3>
+              <p className="font-body text-textMuted text-sm leading-relaxed">
+                Candidates are locally re-ranked using a hybrid formula combining semantic distance and acoustic Euclidean feature distance (<span className="font-mono text-accentPrimary">α = 0.5</span>).
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQs Section */}
+      <section id="faq" className="w-full bg-bgBase border-t border-white/5 px-6 md:px-12 py-24 relative z-10">
+        <div className="max-w-[1000px] mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-3">Got Questions?</span>
+            <h2 className="font-display text-4xl font-bold text-textPrimary tracking-tight mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="font-body text-textMuted text-base">
+              Everything you need to know about AcousticSearch, sound matching, and frequency response curves.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {FAQ_ITEMS.map((item, idx) => (
+              <FaqAccordionItem key={idx} question={item.q} answer={item.a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="w-full bg-black/40 border-t border-white/10 px-6 md:px-12 py-16 relative z-10 text-textMuted">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+          <div className="md:col-span-2">
+            <a href="/" className="font-display font-bold text-2xl tracking-tight text-textPrimary block mb-4">
+              Acoustic<span className="text-accentPrimary">Search.</span>
+            </a>
+            <p className="font-body text-sm text-textMuted max-w-sm leading-relaxed mb-6">
+              AI-powered In-Ear Monitor recommendation engine combining natural language processing, vector embeddings, and acoustic curve math.
+            </p>
+            <div className="flex flex-wrap gap-2 text-[10px] font-mono uppercase tracking-wider text-textMuted">
+              <span className="px-2.5 py-1 bg-white/5 rounded border border-white/5">FastAPI</span>
+              <span className="px-2.5 py-1 bg-white/5 rounded border border-white/5">Supabase pgvector</span>
+              <span className="px-2.5 py-1 bg-white/5 rounded border border-white/5">Gemini API</span>
+              <span className="px-2.5 py-1 bg-white/5 rounded border border-white/5">Astro v5</span>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-mono text-xs text-textPrimary uppercase tracking-widest mb-4">Navigation</h4>
+            <ul className="space-y-2.5 text-sm">
+              <li><a href="/" className="hover:text-accentPrimary transition-colors">Search Engine</a></li>
+              <li><a href="#how-it-works" className="hover:text-accentPrimary transition-colors">How It Works</a></li>
+              <li><a href="#faq" className="hover:text-accentPrimary transition-colors">FAQs</a></li>
+              <li><a href="/about" className="hover:text-accentPrimary transition-colors">About IEMs</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-mono text-xs text-textPrimary uppercase tracking-widest mb-4">Acoustic Traits</h4>
+            <div className="flex flex-wrap gap-1.5 text-xs font-mono">
+              <span className="px-2 py-1 bg-white/5 rounded text-textMuted">Sub-bass</span>
+              <span className="px-2 py-1 bg-white/5 rounded text-textMuted">Warm Mids</span>
+              <span className="px-2 py-1 bg-white/5 rounded text-textMuted">Airy Treble</span>
+              <span className="px-2 py-1 bg-white/5 rounded text-textMuted">V-shaped</span>
+              <span className="px-2 py-1 bg-white/5 rounded text-textMuted">Neutral</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-[1400px] mx-auto border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono">
+          <p>© {new Date().getFullYear()} AcousticSearch. All rights reserved.</p>
+          <p className="text-textMuted/60">Crafted for Audiophiles & Music Enthusiasts</p>
+        </div>
+      </footer>
+
     </div>
   );
 }
-
