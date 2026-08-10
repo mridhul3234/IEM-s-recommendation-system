@@ -1,32 +1,51 @@
 import React from 'react';
-import { Globe, Headphones, Equalizer, Lightning, ShieldCheck, Sparkle, ArrowsLeftRight } from '@phosphor-icons/react';
+import { motion } from 'framer-motion';
+import { Globe, Headphones, Equalizer, Lightning, ShieldCheck, Sparkle, ArrowsLeftRight, Waves } from '@phosphor-icons/react';
 
 export default function AboutApp() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary">
       
-      {/* Identical Sticky Navbar */}
-      <nav className="sticky top-0 flex items-center justify-between py-4 px-6 md:px-12 border-b border-white/5 bg-bgBase/80 backdrop-blur-xl z-50">
-        <div className="flex items-center gap-2">
+      {/* Transparent Sticky Navbar */}
+      <nav className="sticky top-0 flex items-center justify-between py-5 px-6 md:px-12 bg-transparent z-50 pointer-events-auto">
+        
+        {/* Brand Name Only */}
+        <div className="flex items-center">
           <a href="/" className="font-display font-bold text-2xl tracking-tight text-textPrimary hover:opacity-90 transition-opacity">
             Acoustic<span className="text-accentPrimary">Search.</span>
           </a>
         </div>
-        <div className="hidden md:flex items-center gap-10 text-sm font-medium text-textMuted">
-          <a href="/#how-it-works" className="hover:text-textPrimary transition-colors">How It Works</a>
-          <a href="/#faq" className="hover:text-textPrimary transition-colors">FAQ</a>
-          <a href="/about" className="text-accentPrimary font-semibold transition-colors">About IEMs</a>
-        </div>
-        <div className="flex items-center gap-6">
-          <button className="hidden md:flex items-center gap-2 text-sm text-textPrimary font-medium opacity-80 hover:opacity-100 transition-opacity">
-            <Globe weight="bold" size={18} /> Language
-          </button>
-          <a 
-            href="/"
-            className="bg-accentPrimary text-bgBase px-6 py-2.5 rounded-full text-sm font-bold tracking-wide hover:brightness-110 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] flex items-center gap-2"
-          >
-            <ArrowsLeftRight size={18} weight="bold" /> Compare
+        
+        {/* Centered Glassmorphism Floating Pill Container - Only portion with opacity */}
+        <div className="hidden md:flex items-center gap-1 bg-[#0F141C]/80 backdrop-blur-2xl border border-white/10 rounded-full px-3 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+          <a href="/#how-it-works" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
+            How It Works
           </a>
+          <a href="/#advanced-eq" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
+            Advanced EQ
+          </a>
+          <a href="/#faq" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
+            FAQ
+          </a>
+          <a href="/about" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider bg-white/10 text-accentPrimary font-bold transition-all">
+            About IEMs
+          </a>
+        </div>
+
+        {/* Right CTA Button */}
+        <div className="flex items-center gap-4">
+          <button className="hidden lg:flex items-center gap-2 text-xs font-mono uppercase text-textMuted hover:text-textPrimary transition-colors">
+            <Globe weight="bold" size={16} /> EN
+          </button>
+          
+          <motion.a 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            href="/"
+            className="bg-accentPrimary text-black px-6 py-2.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider hover:brightness-110 transition-all shadow-[0_0_20px_rgba(210,248,91,0.35)] flex items-center gap-2"
+          >
+            <ArrowsLeftRight size={16} weight="bold" /> Compare
+          </motion.a>
         </div>
       </nav>
 

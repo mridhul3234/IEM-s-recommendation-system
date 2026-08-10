@@ -22,7 +22,7 @@ export default function EqSliderGrid({ exactFeatures, setExactFeatures, runSearc
                 step="0.5"
                 value={exactFeatures[key]}
                 onChange={(e) => setExactFeatures({...exactFeatures, [key]: parseFloat(e.target.value)})}
-                className="w-40 -rotate-90 appearance-none bg-bgBorder h-2 rounded-full outline-none cursor-pointer accent-[#C19B76]"
+                className="w-40 -rotate-90 appearance-none bg-bgBorder h-2 rounded-full outline-none cursor-pointer accent-[#D2F85B]"
               />
             </div>
             <div className="text-xs font-mono text-textPrimary mt-4 bg-bgBackground px-3 py-1 rounded-md border border-bgBorder">

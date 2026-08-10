@@ -66,7 +66,7 @@ export default function ResultCard({ result, rank, isCompared, onToggleCompare }
             onClick={() => onToggleCompare(result.name)}
             className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider rounded border transition-colors duration-200 cursor-pointer ${
               isCompared
-                ? 'bg-accentPrimary text-bgBase border-accentPrimary font-bold shadow-[0_0_12px_rgba(255,138,76,0.4)]'
+                ? 'bg-accentPrimary text-black border-accentPrimary font-bold shadow-[0_0_12px_rgba(210,248,91,0.5)]'
                 : 'bg-transparent text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-accentPrimary'
             }`}
           >

@@ -169,39 +169,50 @@ export default function SearchApp() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary">
       
-      {/* Sticky Navbar */}
-      <nav className="sticky top-0 flex items-center justify-between py-4 px-6 md:px-12 border-b border-white/5 bg-bgBase/80 backdrop-blur-xl z-50">
-        <div className="flex items-center gap-2">
+      {/* Transparent Sticky Navbar */}
+      <nav className="sticky top-0 flex items-center justify-between py-5 px-6 md:px-12 bg-transparent z-50 pointer-events-auto">
+        
+        {/* Brand Name Only */}
+        <div className="flex items-center">
           <a href="/" className="font-display font-bold text-2xl tracking-tight text-textPrimary hover:opacity-90 transition-opacity">
             Acoustic<span className="text-accentPrimary">Search.</span>
           </a>
         </div>
         
-        {/* Header Links */}
-        <div className="hidden md:flex items-center gap-10 text-sm font-medium text-textMuted">
-          <a href="#how-it-works" className="hover:text-textPrimary transition-colors">How It Works</a>
-          <a href="#advanced-eq" className="hover:text-textPrimary transition-colors">Advanced EQ</a>
-          <a href="#faq" className="hover:text-textPrimary transition-colors">FAQ</a>
-          <a href="/about" className="hover:text-textPrimary transition-colors">About IEMs</a>
+        {/* Centered Glassmorphism Floating Pill Container - Only portion with opacity */}
+        <div className="hidden md:flex items-center gap-1 bg-[#0F141C]/80 backdrop-blur-2xl border border-white/10 rounded-full px-3 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+          <a href="/#how-it-works" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
+            How It Works
+          </a>
+          <a href="#advanced-eq" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
+            Advanced EQ
+          </a>
+          <a href="#faq" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
+            FAQ
+          </a>
+          <a href="/about" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
+            About IEMs
+          </a>
         </div>
 
-        <div className="flex items-center gap-6">
-          <button className="hidden md:flex items-center gap-2 text-sm text-textPrimary font-medium opacity-80 hover:opacity-100 transition-opacity">
-            <Globe weight="bold" size={18} /> Language
+        {/* Right CTA Button (Pill Lime Button) */}
+        <div className="flex items-center gap-4">
+          <button className="hidden lg:flex items-center gap-2 text-xs font-mono uppercase text-textMuted hover:text-textPrimary transition-colors">
+            <Globe weight="bold" size={16} /> EN
           </button>
           
           <motion.button 
-            whileHover={{ scale: 1.04 }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleNavCompareClick}
-            className="bg-accentPrimary text-bgBase px-6 py-2.5 rounded-full text-sm font-bold tracking-wide hover:brightness-110 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] relative cursor-pointer flex items-center gap-2"
+            className="bg-accentPrimary text-black px-6 py-2.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider hover:brightness-110 transition-all shadow-[0_0_20px_rgba(210,248,91,0.35)] relative cursor-pointer flex items-center gap-2"
           >
-            <ArrowsLeftRight size={18} weight="bold" />
+            <ArrowsLeftRight size={16} weight="bold" />
             Compare {compareCart.length > 0 && `(${compareCart.length})`}
             {compareCart.length > 0 && (
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-black"></span>
               </span>
             )}
           </motion.button>
@@ -260,7 +271,7 @@ export default function SearchApp() {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handlePriceTierChange('all')}
-                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'all' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'all' ? 'bg-accentPrimary text-black shadow-[0_0_15px_rgba(210,248,91,0.4)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
               >
                 All Prices
               </motion.button>
@@ -268,7 +279,7 @@ export default function SearchApp() {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handlePriceTierChange('cheaper')}
-                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'cheaper' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'cheaper' ? 'bg-accentPrimary text-black shadow-[0_0_15px_rgba(210,248,91,0.4)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
               >
                 Under $500
               </motion.button>
@@ -276,7 +287,7 @@ export default function SearchApp() {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handlePriceTierChange('costlier')}
-                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'costlier' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'costlier' ? 'bg-accentPrimary text-black shadow-[0_0_15px_rgba(210,248,91,0.4)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
               >
                 $500+
               </motion.button>
@@ -321,7 +332,7 @@ export default function SearchApp() {
                 whileTap={{ scale: 0.92 }}
                 type="submit"
                 disabled={loading}
-                className="w-full md:w-[76px] h-[76px] shrink-0 bg-accentPrimary rounded-[1.25rem] flex items-center justify-center text-bgBase hover:brightness-110 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full md:w-[76px] h-[76px] shrink-0 bg-accentPrimary rounded-[1.25rem] flex items-center justify-center text-black hover:brightness-110 transition-all shadow-[0_0_20px_rgba(210,248,91,0.4)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
                   <div className="w-7 h-7 border-2 border-bgBase border-t-transparent rounded-full animate-spin"></div>
@@ -514,7 +525,7 @@ export default function SearchApp() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 25 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#0B0F15]/90 backdrop-blur-2xl border border-accentPrimary/50 shadow-[0_20px_50px_rgba(255,138,76,0.3)] rounded-full px-8 py-4 flex items-center gap-6 z-50"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#0B0F15]/90 backdrop-blur-2xl border border-accentPrimary/50 shadow-[0_20px_50px_rgba(210,248,91,0.3)] rounded-full px-8 py-4 flex items-center gap-6 z-50"
           >
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-accentPrimary animate-pulse"></div>
@@ -527,7 +538,7 @@ export default function SearchApp() {
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.94 }}
               onClick={handleNavCompareClick}
-              className="px-6 py-2.5 bg-accentPrimary text-bgBase rounded-full font-mono text-xs uppercase tracking-wider font-bold hover:brightness-110 transition-all shadow-lg cursor-pointer flex items-center gap-2"
+              className="px-6 py-2.5 bg-accentPrimary text-black rounded-full font-mono text-xs uppercase tracking-wider font-bold hover:brightness-110 transition-all shadow-lg cursor-pointer flex items-center gap-2"
             >
               <ArrowsLeftRight size={16} weight="bold" />
               Compare Now
