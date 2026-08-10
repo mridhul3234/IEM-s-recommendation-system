@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import MiniChart from './MiniChart';
 
 export default function ResultCard({ result, rank, isCompared, onToggleCompare }) {
@@ -59,16 +60,18 @@ export default function ResultCard({ result, rank, isCompared, onToggleCompare }
         
         {/* Compare Button (Moved below graph) */}
         {onToggleCompare && (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => onToggleCompare(result.name)}
-            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider rounded border transition-all duration-200 ${
+            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider rounded border transition-colors duration-200 cursor-pointer ${
               isCompared
-                ? 'bg-accentPrimary/20 text-accentPrimary border-accentPrimary/50'
+                ? 'bg-accentPrimary text-bgBase border-accentPrimary font-bold shadow-[0_0_12px_rgba(255,138,76,0.4)]'
                 : 'bg-transparent text-textMuted border-bgBorder hover:border-accentPrimary/50 hover:text-accentPrimary'
             }`}
           >
-            {isCompared ? 'Added to Compare' : '+ Compare'}
-          </button>
+            {isCompared ? '✓ Added to Compare' : '+ Compare'}
+          </motion.button>
         )}
       </div>
 

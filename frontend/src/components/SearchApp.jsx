@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown } from '@phosphor-icons/react';
+import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, Check, WarningCircle } from '@phosphor-icons/react';
 import ResultCard from './ResultCard';
 import EqSliderGrid from './EqSliderGrid';
 
@@ -26,7 +26,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How does the IEM comparison feature work?",
-    a: "Click the '+ Compare' button on any recommendation card to add up to 3 IEMs to your comparison drawer. Click 'Compare' in the top right to compare their sound signatures, prices, and acoustic trait distributions side-by-side."
+    a: "Click the '+ Compare' button on any recommendation card to add up to 3 IEMs to your comparison drawer. Click 'Compare' in the top right or the bottom floating drawer to compare their sound signatures, prices, and acoustic trait distributions side-by-side."
   }
 ];
 
@@ -35,7 +35,8 @@ function FaqAccordionItem({ question, answer }) {
 
   return (
     <div className="border border-white/10 rounded-2xl bg-white/[0.02] overflow-hidden transition-colors hover:border-white/20">
-      <button 
+      <motion.button 
+        whileTap={{ scale: 0.99 }}
         onClick={() => setIsOpen(!isOpen)}
         className="w-full p-6 text-left flex items-center justify-between gap-4 font-display font-semibold text-lg text-textPrimary cursor-pointer select-none"
       >
@@ -43,7 +44,7 @@ function FaqAccordionItem({ question, answer }) {
         <div className={`p-2 rounded-full bg-white/5 text-accentPrimary transition-transform duration-300 ${isOpen ? 'rotate-180 bg-accentPrimary/20' : ''}`}>
           <CaretDown size={18} weight="bold" />
         </div>
-      </button>
+      </motion.button>
 
       <AnimatePresence initial={false}>
         {isOpen && (
@@ -82,6 +83,7 @@ export default function SearchApp() {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
   const [compareCart, setCompareCart] = useState([]);
+  const [compareNotice, setCompareNotice] = useState(null);
 
   const runSearch = async (searchQuery, targetTopK = INITIAL_TOP_K, isLoadMore = false, selectedPriceTier = priceTier) => {
     const q = searchQuery.trim();
@@ -143,11 +145,22 @@ export default function SearchApp() {
   };
 
   const handleToggleCompare = (iemName) => {
+    setCompareNotice(null);
     setCompareCart(prev => {
       if (prev.includes(iemName)) return prev.filter(n => n !== iemName);
       if (prev.length >= 3) return prev; 
       return [...prev, iemName];
     });
+  };
+
+  const handleNavCompareClick = (e) => {
+    if (compareCart.length < 2) {
+      e.preventDefault();
+      setCompareNotice("Select at least 2 IEMs to compare side-by-side.");
+      setTimeout(() => setCompareNotice(null), 4000);
+    } else {
+      window.location.href = "/compare?" + compareCart.map((c, i) => `iem${i+1}=${encodeURIComponent(c)}`).join('&');
+    }
   };
 
   return (
@@ -160,20 +173,26 @@ export default function SearchApp() {
             Acoustic<span className="text-accentPrimary">Search.</span>
           </a>
         </div>
+        
+        {/* Header Links - Discover removed */}
         <div className="hidden md:flex items-center gap-10 text-sm font-medium text-textMuted">
-          <a href="/" className="hover:text-textPrimary transition-colors flex items-center gap-1">Discover <span className="text-[9px]">▼</span></a>
           <a href="#how-it-works" className="hover:text-textPrimary transition-colors">How It Works</a>
           <a href="#faq" className="hover:text-textPrimary transition-colors">FAQ</a>
           <a href="/about" className="hover:text-textPrimary transition-colors">About IEMs</a>
         </div>
-        <div className="flex items-center gap-8">
+
+        <div className="flex items-center gap-6">
           <button className="hidden md:flex items-center gap-2 text-sm text-textPrimary font-medium opacity-80 hover:opacity-100 transition-opacity">
             <Globe weight="bold" size={18} /> Language
           </button>
-          <a 
-            href={compareCart.length > 0 ? "/compare?" + compareCart.map((c, i) => `iem${i+1}=${encodeURIComponent(c)}`).join('&') : "#"}
-            className="bg-accentPrimary text-bgBase px-6 py-2.5 rounded-full text-sm font-bold tracking-wide hover:brightness-110 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] relative"
+          
+          <motion.button 
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleNavCompareClick}
+            className="bg-accentPrimary text-bgBase px-6 py-2.5 rounded-full text-sm font-bold tracking-wide hover:brightness-110 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] relative cursor-pointer flex items-center gap-2"
           >
+            <ArrowsLeftRight size={18} weight="bold" />
             Compare {compareCart.length > 0 && `(${compareCart.length})`}
             {compareCart.length > 0 && (
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -181,9 +200,24 @@ export default function SearchApp() {
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
               </span>
             )}
-          </a>
+          </motion.button>
         </div>
       </nav>
+
+      {/* Compare Notice Toast */}
+      <AnimatePresence>
+        {compareNotice && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-accentPrimary text-bgBase font-mono text-xs uppercase tracking-wider px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 border border-white/20 font-bold"
+          >
+            <WarningCircle size={18} weight="bold" />
+            {compareNotice}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Fullscreen Hero Section */}
       <div className="flex-1 flex flex-col relative z-20 w-full min-h-[calc(100vh-80px)] justify-between pt-12 md:pt-20 pb-48 overflow-hidden">
@@ -216,26 +250,32 @@ export default function SearchApp() {
         <div className="absolute bottom-[-4rem] left-6 right-6 md:left-12 md:right-12 z-40 max-w-[1500px] mx-auto">
           <div className="backdrop-blur-2xl bg-white/[0.03] border border-white/10 p-5 md:p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
             
-            {/* Tabs */}
+            {/* Tabs with smooth motion physics */}
             <div className="flex items-center gap-2 mb-6">
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handlePriceTierChange('all')}
-                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'all' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'all' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
               >
                 All Prices
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handlePriceTierChange('cheaper')}
-                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'cheaper' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'cheaper' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
               >
                 Under $500
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handlePriceTierChange('costlier')}
-                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all ${priceTier === 'costlier' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
+                className={`px-5 py-2.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${priceTier === 'costlier' ? 'bg-accentPrimary text-bgBase shadow-[0_0_15px_rgba(255,138,76,0.3)] font-bold' : 'bg-white/5 text-textPrimary hover:bg-white/10 border border-white/5'}`}
               >
                 $500+
-              </button>
+              </motion.button>
             </div>
 
             {/* Inputs */}
@@ -254,30 +294,34 @@ export default function SearchApp() {
                 />
               </div>
 
-              {/* Advanced EQ Toggle */}
-              <button 
+              {/* Advanced EQ Toggle Button with Spring Motion */}
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.96 }}
                 type="button"
                 onClick={() => setAdvancedMode(!advancedMode)}
-                className={`text-left bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col min-w-[220px] transition-colors ${advancedMode ? 'border-accentPrimary/50 bg-accentPrimary/5' : 'hover:bg-white/10'}`}
+                className={`text-left bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col min-w-[220px] transition-colors cursor-pointer ${advancedMode ? 'border-accentPrimary/50 bg-accentPrimary/5' : 'hover:bg-white/10'}`}
               >
                 <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1 cursor-pointer">Advanced EQ</label>
                 <div className="text-textPrimary font-body font-medium text-lg px-1 mt-0.5">
                   {advancedMode ? 'Active / Configured' : 'Configure Sliders'}
                 </div>
-              </button>
+              </motion.button>
 
-              {/* Submit Button */}
-              <button 
+              {/* Search Submit Button with Motion Physics */}
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.92 }}
                 type="submit"
                 disabled={loading}
-                className="w-full md:w-[76px] h-[76px] shrink-0 bg-accentPrimary rounded-[1.25rem] flex items-center justify-center text-bgBase hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full md:w-[76px] h-[76px] shrink-0 bg-accentPrimary rounded-[1.25rem] flex items-center justify-center text-bgBase hover:brightness-110 transition-all shadow-[0_0_20px_rgba(255,138,76,0.3)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
                   <div className="w-7 h-7 border-2 border-bgBase border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <MagnifyingGlass size={32} weight="bold" />
                 )}
-              </button>
+              </motion.button>
             </form>
           </div>
         </div>
@@ -354,14 +398,16 @@ export default function SearchApp() {
 
                   {hasMore ? (
                     <div className="flex justify-center mt-12">
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.95 }}
                         type="button"
                         onClick={handleSuggestMore}
                         disabled={loadingMore}
-                        className="px-8 py-4 bg-white/5 border border-white/10 hover:border-accentPrimary hover:bg-accentPrimary/5 text-textPrimary hover:text-accentPrimary font-mono uppercase tracking-wider text-xs rounded-xl transition-all duration-300 disabled:opacity-50"
+                        className="px-8 py-4 bg-white/5 border border-white/10 hover:border-accentPrimary hover:bg-accentPrimary/5 text-textPrimary hover:text-accentPrimary font-mono uppercase tracking-wider text-xs rounded-xl transition-all duration-300 disabled:opacity-50 cursor-pointer"
                       >
                         {loadingMore ? 'Loading...' : 'Load More IEMs'}
-                      </button>
+                      </motion.button>
                     </div>
                   ) : (
                     <div className="text-center font-mono text-xs text-textMuted uppercase tracking-widest mt-12 opacity-50">
@@ -372,6 +418,36 @@ export default function SearchApp() {
                 </div>
               )}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Compare Action Drawer at Bottom */}
+      <AnimatePresence>
+        {compareCart.length > 0 && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 25 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#0B0F15]/90 backdrop-blur-2xl border border-accentPrimary/50 shadow-[0_20px_50px_rgba(255,138,76,0.3)] rounded-full px-8 py-4 flex items-center gap-6 z-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-accentPrimary animate-pulse"></div>
+              <span className="font-mono text-xs text-textPrimary uppercase tracking-widest font-semibold">
+                {compareCart.length} {compareCart.length === 1 ? 'IEM' : 'IEMs'} Selected
+              </span>
+            </div>
+
+            <motion.button 
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={handleNavCompareClick}
+              className="px-6 py-2.5 bg-accentPrimary text-bgBase rounded-full font-mono text-xs uppercase tracking-wider font-bold hover:brightness-110 transition-all shadow-lg cursor-pointer flex items-center gap-2"
+            >
+              <ArrowsLeftRight size={16} weight="bold" />
+              Compare Now
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -406,7 +482,7 @@ export default function SearchApp() {
               </div>
               <h3 className="font-display text-xl font-bold text-textPrimary mb-3">2. Vector Search</h3>
               <p className="font-body text-textMuted text-sm leading-relaxed">
-                Dense 384-dimensionalMiniLM embeddings perform cosine similarity searches over Supabase <code className="font-mono text-accentPrimary text-xs">pgvector</code> datasets of measured IEMs.
+                Dense 384-dimensional MiniLM embeddings perform cosine similarity searches over Supabase <code className="font-mono text-accentPrimary text-xs">pgvector</code> datasets of measured IEMs.
               </p>
             </div>
 
