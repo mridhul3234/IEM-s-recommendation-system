@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, WarningCircle, SlidersHorizontal } from '@phosphor-icons/react';
 import ResultCard from './ResultCard';
 import EqSliderGrid from './EqSliderGrid';
+import ScrollFrameBackground from './ScrollFrameBackground';
 
 const INITIAL_TOP_K = 3;
 const STEP_TOP_K = 3;
@@ -34,7 +35,7 @@ function FaqAccordionItem({ question, answer }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border border-white/10 rounded-2xl bg-white/[0.02] overflow-hidden transition-colors hover:border-white/20">
+    <div className="border border-white/10 rounded-2xl bg-white/[0.03] backdrop-blur-xl overflow-hidden transition-colors hover:border-white/20">
       <motion.button 
         whileTap={{ scale: 0.99 }}
         onClick={() => setIsOpen(!isOpen)}
@@ -167,8 +168,11 @@ export default function SearchApp() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary">
+    <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary relative">
       
+      {/* Dynamic 180-Frame Scroll Background */}
+      <ScrollFrameBackground />
+
       {/* Transparent Sticky Navbar */}
       <nav className="sticky top-0 flex items-center justify-between py-5 px-6 md:px-12 bg-transparent z-50 pointer-events-auto">
         
@@ -179,8 +183,8 @@ export default function SearchApp() {
           </a>
         </div>
         
-        {/* Centered Glassmorphism Floating Pill Container - Only portion with opacity */}
-        <div className="hidden md:flex items-center gap-1 bg-[#0F141C]/80 backdrop-blur-2xl border border-white/10 rounded-full px-3 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+        {/* Centered Glassmorphism Floating Pill Container - Low opacity glass */}
+        <div className="hidden md:flex items-center gap-1 bg-[#0F141C]/60 backdrop-blur-2xl border border-white/10 rounded-full px-3 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           <a href="/#how-it-works" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
             How It Works
           </a>
@@ -195,7 +199,7 @@ export default function SearchApp() {
           </a>
         </div>
 
-        {/* Right CTA Button (Pill Lime Button) */}
+        {/* Right CTA Button */}
         <div className="flex items-center gap-4">
           <button className="hidden lg:flex items-center gap-2 text-xs font-mono uppercase text-textMuted hover:text-textPrimary transition-colors">
             <Globe weight="bold" size={16} /> EN
@@ -226,7 +230,7 @@ export default function SearchApp() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-accentPrimary text-bgBase font-mono text-xs uppercase tracking-wider px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 border border-white/20 font-bold"
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-accentPrimary text-black font-mono text-xs uppercase tracking-wider px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 border border-black/20 font-bold"
           >
             <WarningCircle size={18} weight="bold" />
             {compareNotice}
@@ -237,33 +241,22 @@ export default function SearchApp() {
       {/* Fullscreen Hero Section */}
       <div className="relative z-20 w-full min-h-[calc(100vh-80px)] flex flex-col justify-between pt-12 md:pt-20 pb-16 overflow-hidden">
         
-        {/* Fullscreen Background Image with Dark Vignette */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="/right_photo.png" 
-            alt="Hero Background" 
-            className="w-full h-full object-cover object-center scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-bgBase via-bgBase/80 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-bgBase via-transparent to-bgBase/70"></div>
-        </div>
-
-        {/* Hero Content */}
+        {/* Hero Content - Fully Transparent without card box */}
         <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-12 my-auto">
           <div className="max-w-2xl">
-            <h1 className="font-display text-6xl md:text-8xl tracking-tighter leading-[0.95] text-textPrimary mb-6 drop-shadow-lg">
+            <h1 className="font-display text-6xl md:text-8xl tracking-tighter leading-[0.95] text-textPrimary mb-6 drop-shadow-2xl">
               <span className="font-light text-textMuted block mb-2">Discover</span>
               <span className="font-bold">Perfect Audio</span>
             </h1>
-            <p className="font-body text-textMuted text-lg md:text-xl max-w-md leading-relaxed drop-shadow">
+            <p className="font-body text-textMuted text-lg md:text-xl max-w-md leading-relaxed drop-shadow-lg">
               Find and compare your exact acoustic target.
             </p>
           </div>
         </div>
 
-        {/* Integrated Floating Glassmorphism Search Bar - Non-colliding */}
+        {/* Integrated Glassmorphism Search Bar - Translucent */}
         <div className="relative z-30 max-w-[1500px] w-full mx-auto px-6 md:px-12 mt-12">
-          <div className="backdrop-blur-2xl bg-white/[0.03] border border-white/10 p-5 md:p-8 rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
+          <div className="backdrop-blur-2xl bg-[#0F141C]/50 border border-white/10 p-5 md:p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
             
             {/* Tabs */}
             <div className="flex items-center gap-2 mb-6">
@@ -297,7 +290,7 @@ export default function SearchApp() {
             <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
               
               {/* Target Query */}
-              <div className="flex-1 bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col focus-within:border-accentPrimary/50 focus-within:bg-white/10 transition-colors">
+              <div className="flex-1 bg-black/20 border border-white/10 rounded-[1.25rem] p-4 flex flex-col focus-within:border-accentPrimary/50 focus-within:bg-black/30 transition-colors">
                 <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1">Target Sound</label>
                 <input 
                   type="text" 
@@ -314,7 +307,7 @@ export default function SearchApp() {
                 whileTap={{ scale: 0.96 }}
                 type="button"
                 onClick={scrollToAdvancedEq}
-                className="text-left bg-white/5 border border-white/10 rounded-[1.25rem] p-4 flex flex-col min-w-[220px] transition-colors cursor-pointer hover:bg-white/10 hover:border-accentPrimary/40 group"
+                className="text-left bg-black/20 border border-white/10 rounded-[1.25rem] p-4 flex flex-col min-w-[220px] transition-colors cursor-pointer hover:bg-black/30 hover:border-accentPrimary/40 group"
               >
                 <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1 cursor-pointer flex items-center justify-between">
                   <span>Advanced EQ</span>
@@ -335,7 +328,7 @@ export default function SearchApp() {
                 className="w-full md:w-[76px] h-[76px] shrink-0 bg-accentPrimary rounded-[1.25rem] flex items-center justify-center text-black hover:brightness-110 transition-all shadow-[0_0_20px_rgba(210,248,91,0.4)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
-                  <div className="w-7 h-7 border-2 border-bgBase border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-7 h-7 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <MagnifyingGlass size={32} weight="bold" />
                 )}
@@ -345,14 +338,14 @@ export default function SearchApp() {
         </div>
       </div>
 
-      {/* Search Results Section */}
+      {/* Search Results Section - Translucent Glass */}
       <AnimatePresence>
         {(results.length > 0 || error || loading) && (
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="w-full bg-bgBase relative z-10 px-6 md:px-12 py-16 border-t border-white/5"
+            className="w-full bg-[#0F141C]/40 backdrop-blur-2xl relative z-10 px-6 md:px-12 py-16 border-t border-white/10"
           >
             <div className="max-w-[1200px] mx-auto">
               
@@ -426,8 +419,8 @@ export default function SearchApp() {
         )}
       </AnimatePresence>
 
-      {/* Always Visible Advanced Acoustic EQ Sliders Section */}
-      <section id="advanced-eq" className="w-full bg-bgBase border-t border-white/5 px-6 md:px-12 py-24 relative z-10">
+      {/* Advanced Acoustic EQ Sliders Section - Translucent Glass */}
+      <section id="advanced-eq" className="w-full bg-[#0F141C]/40 backdrop-blur-2xl border-t border-white/10 px-6 md:px-12 py-24 relative z-10">
         <div className="max-w-[1200px] mx-auto">
           <div className="mb-10">
             <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-2">Manual Tuning</span>
@@ -449,8 +442,8 @@ export default function SearchApp() {
         </div>
       </section>
 
-      {/* How It Works & Engine Architecture Section */}
-      <section id="how-it-works" className="w-full bg-bgBase/95 border-t border-white/5 px-6 md:px-12 py-24 relative z-10">
+      {/* How It Works Section - Translucent Glass */}
+      <section id="how-it-works" className="w-full bg-[#0F141C]/30 backdrop-blur-2xl border-t border-white/10 px-6 md:px-12 py-24 relative z-10">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-3">Engine Architecture</span>
@@ -463,7 +456,7 @@ export default function SearchApp() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+            <div className="bg-black/30 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
               <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
                 <Cpu size={28} weight="bold" />
               </div>
@@ -473,7 +466,7 @@ export default function SearchApp() {
               </p>
             </div>
 
-            <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+            <div className="bg-black/30 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
               <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
                 <Target size={28} weight="bold" />
               </div>
@@ -483,7 +476,7 @@ export default function SearchApp() {
               </p>
             </div>
 
-            <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
+            <div className="bg-black/30 border border-white/10 rounded-[2rem] p-8 hover:border-accentPrimary/40 transition-all duration-300 backdrop-blur-xl relative overflow-hidden group">
               <div className="w-12 h-12 rounded-2xl bg-accentPrimary/10 border border-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6 group-hover:scale-110 transition-transform">
                 <Waves size={28} weight="bold" />
               </div>
@@ -496,8 +489,8 @@ export default function SearchApp() {
         </div>
       </section>
 
-      {/* FAQs Section */}
-      <section id="faq" className="w-full bg-bgBase border-t border-white/5 px-6 md:px-12 py-24 relative z-10">
+      {/* FAQs Section - Translucent Glass */}
+      <section id="faq" className="w-full bg-[#0F141C]/40 backdrop-blur-2xl border-t border-white/10 px-6 md:px-12 py-24 relative z-10">
         <div className="max-w-[1000px] mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-3">Got Questions?</span>
@@ -548,7 +541,7 @@ export default function SearchApp() {
       </AnimatePresence>
 
       {/* Footer */}
-      <footer className="w-full bg-black/40 border-t border-white/10 px-6 md:px-12 py-16 relative z-10 text-textMuted">
+      <footer className="w-full bg-black/60 backdrop-blur-2xl border-t border-white/10 px-6 md:px-12 py-16 relative z-10 text-textMuted">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           <div className="md:col-span-2">
             <a href="/" className="font-display font-bold text-2xl tracking-tight text-textPrimary block mb-4">

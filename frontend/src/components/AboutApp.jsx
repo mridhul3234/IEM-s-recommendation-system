@@ -1,11 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Headphones, Equalizer, Lightning, ShieldCheck, Sparkle, ArrowsLeftRight, Waves } from '@phosphor-icons/react';
+import { Globe, Headphones, Equalizer, Lightning, ShieldCheck, Sparkle, ArrowsLeftRight } from '@phosphor-icons/react';
+import ScrollFrameBackground from './ScrollFrameBackground';
 
 export default function AboutApp() {
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary">
+    <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary relative">
       
+      {/* Dynamic 180-Frame Scroll Background */}
+      <ScrollFrameBackground />
+
       {/* Transparent Sticky Navbar */}
       <nav className="sticky top-0 flex items-center justify-between py-5 px-6 md:px-12 bg-transparent z-50 pointer-events-auto">
         
@@ -16,8 +20,8 @@ export default function AboutApp() {
           </a>
         </div>
         
-        {/* Centered Glassmorphism Floating Pill Container - Only portion with opacity */}
-        <div className="hidden md:flex items-center gap-1 bg-[#0F141C]/80 backdrop-blur-2xl border border-white/10 rounded-full px-3 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+        {/* Centered Glassmorphism Floating Pill Container */}
+        <div className="hidden md:flex items-center gap-1 bg-[#0F141C]/60 backdrop-blur-2xl border border-white/10 rounded-full px-3 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           <a href="/#how-it-works" className="px-5 py-2 rounded-full text-xs font-mono uppercase tracking-wider text-textMuted hover:text-textPrimary hover:bg-white/10 transition-all">
             How It Works
           </a>
@@ -50,23 +54,23 @@ export default function AboutApp() {
       </nav>
 
       {/* Hero Header */}
-      <header className="relative pt-16 md:pt-24 pb-16 px-6 md:px-12 max-w-[1200px] mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accentPrimary/10 border border-accentPrimary/30 text-accentPrimary font-mono text-xs uppercase tracking-widest mb-6">
+      <header className="relative z-10 pt-16 md:pt-24 pb-16 px-6 md:px-12 max-w-[1200px] mx-auto text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accentPrimary/10 border border-accentPrimary/30 text-accentPrimary font-mono text-xs uppercase tracking-widest mb-6 backdrop-blur-xl">
           <Sparkle weight="bold" size={14} /> Audiophile 101 Guide
         </div>
-        <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-textPrimary mb-6 leading-[1.1]">
+        <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-textPrimary mb-6 leading-[1.1] drop-shadow-lg">
           What Are IEMs (In-Ear Monitors) & How Are They Different From Earphones?
         </h1>
-        <p className="font-body text-textMuted text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
+        <p className="font-body text-textMuted text-lg md:text-xl max-w-3xl mx-auto leading-relaxed drop-shadow">
           You are probably coming across the term "In-Ear Monitor" for the first time while searching for audio gear. Here is everything you need to know about what IEMs are, why they sound so incredible, and how they differ from regular earphones.
         </p>
       </header>
 
-      {/* Main Content Sections / Bento Grid Layout */}
-      <main className="flex-1 max-w-[1200px] mx-auto px-6 md:px-12 pb-24 space-y-16">
+      {/* Main Content Sections / Translucent Bento Grid Layout */}
+      <main className="relative z-10 flex-1 max-w-[1200px] mx-auto px-6 md:px-12 pb-24 space-y-16">
         
         {/* Section 1: The Difference */}
-        <section className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 md:p-12 backdrop-blur-xl relative overflow-hidden">
+        <section className="bg-[#0F141C]/50 border border-white/10 rounded-[2.5rem] p-8 md:p-12 backdrop-blur-2xl relative overflow-hidden shadow-2xl">
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-accentPrimary/10 rounded-full blur-3xl pointer-events-none"></div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
@@ -83,7 +87,7 @@ export default function AboutApp() {
               </p>
             </div>
             
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
+            <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-4">
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
                 <Headphones size={32} className="text-textMuted shrink-0" />
                 <div>
@@ -104,7 +108,7 @@ export default function AboutApp() {
 
         {/* Section 2: Born on the Stage */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-between">
+          <div className="md:col-span-2 bg-[#0F141C]/50 border border-white/10 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-2xl flex flex-col justify-between shadow-2xl">
             <div>
               <span className="font-mono text-xs uppercase tracking-widest text-accentPrimary block mb-3">02. The Heritage</span>
               <h2 className="font-display text-3xl font-bold text-textPrimary mb-4">
@@ -119,7 +123,7 @@ export default function AboutApp() {
             </div>
           </div>
 
-          <div className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-between">
+          <div className="bg-[#0F141C]/50 border border-white/10 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-2xl flex flex-col justify-between shadow-2xl">
             <div className="w-12 h-12 rounded-2xl bg-accentPrimary/20 flex items-center justify-center text-accentPrimary mb-6">
               <Lightning size={24} weight="bold" />
             </div>
@@ -135,7 +139,7 @@ export default function AboutApp() {
         {/* Section 3: Ergonomics & Sound Resolution */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
-          <div className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 md:p-10">
+          <div className="bg-[#0F141C]/50 border border-white/10 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-2xl shadow-2xl">
             <span className="font-mono text-xs uppercase tracking-widest text-accentPrimary block mb-3">03. Ergonomics</span>
             <h3 className="font-display text-2xl font-bold text-textPrimary mb-4">
               The Over-Ear Cable Design
@@ -148,7 +152,7 @@ export default function AboutApp() {
             </p>
           </div>
 
-          <div className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 md:p-10">
+          <div className="bg-[#0F141C]/50 border border-white/10 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-2xl shadow-2xl">
             <span className="font-mono text-xs uppercase tracking-widest text-accentPrimary block mb-3">04. Sound Quality</span>
             <h3 className="font-display text-2xl font-bold text-textPrimary mb-4">
               Built Solely to Sound Incredible
@@ -164,7 +168,7 @@ export default function AboutApp() {
         </section>
 
         {/* Source Attribution Box */}
-        <div className="p-6 rounded-2xl bg-white/5 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="p-6 rounded-2xl bg-[#0F141C]/60 backdrop-blur-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <ShieldCheck size={32} className="text-accentPrimary shrink-0" />
             <div>
@@ -185,7 +189,7 @@ export default function AboutApp() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full bg-black/40 border-t border-white/10 px-6 md:px-12 py-16 relative z-10 text-textMuted">
+      <footer className="w-full bg-black/60 backdrop-blur-2xl border-t border-white/10 px-6 md:px-12 py-16 relative z-10 text-textMuted">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           <div className="md:col-span-2">
             <a href="/" className="font-display font-bold text-2xl tracking-tight text-textPrimary block mb-4">
