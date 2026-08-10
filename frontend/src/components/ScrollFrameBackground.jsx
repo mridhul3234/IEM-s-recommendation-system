@@ -108,11 +108,11 @@ export default function ScrollFrameBackground() {
       {/* Hardware-Accelerated 60 FPS HTML5 Canvas */}
       <canvas 
         ref={canvasRef} 
-        className="w-full h-full opacity-40 transition-opacity duration-300"
+        className="w-full h-full opacity-85 transition-opacity duration-300"
       />
-      {/* Dark Vignette Overlay for readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-bgBase/80 via-transparent to-bgBase/70"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-bgBase/70 via-transparent to-bgBase/70"></div>
+      {/* Light Vignette Overlay for readability while keeping 3D frames vivid */}
+      <div className="absolute inset-0 bg-gradient-to-t from-bgBase/50 via-transparent to-bgBase/40"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-bgBase/40 via-transparent to-bgBase/40"></div>
     </div>
   );
 }

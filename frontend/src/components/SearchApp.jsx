@@ -419,15 +419,15 @@ export default function SearchApp() {
         )}
       </AnimatePresence>
 
-      {/* Advanced Acoustic EQ Sliders Section - Translucent Glass */}
-      <section id="advanced-eq" className="w-full bg-[#0F141C]/40 backdrop-blur-2xl border-t border-white/10 px-6 md:px-12 py-24 relative z-10">
+      {/* Advanced Acoustic EQ Sliders Section - Transparent Outer Section */}
+      <section id="advanced-eq" className="w-full bg-transparent px-6 md:px-12 py-20 relative z-10">
         <div className="max-w-[1200px] mx-auto">
-          <div className="mb-10">
+          <div className="mb-10 text-center">
             <span className="font-mono text-xs text-accentPrimary uppercase tracking-widest block mb-2">Manual Tuning</span>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-textPrimary tracking-tight mb-3">
+            <h2 className="font-display text-3xl md:text-5xl font-bold text-textPrimary tracking-tight mb-3 drop-shadow-lg">
               Advanced Acoustic Configuration
             </h2>
-            <p className="font-body text-textMuted text-base max-w-2xl">
+            <p className="font-body text-textMuted text-base md:text-lg max-w-2xl mx-auto drop-shadow">
               Adjust individual frequency band sliders (sub-bass, presence, air, tonal tilt) to search for custom acoustic profiles directly.
             </p>
           </div>
