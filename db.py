@@ -11,11 +11,20 @@ import numpy as np
 
 load_dotenv()
 
+def is_supabase_configured() -> bool:
+    url = (os.environ.get("SUPABASE_URL") or "").strip()
+    key = (os.environ.get("SUPABASE_KEY") or "").strip()
+    if not url or not key:
+        return False
+    if "your-project-id" in url or "your_supabase" in key or url.startswith("your_") or key.startswith("your_"):
+        return False
+    return True
+
 def get_client() -> Client:
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_KEY")
-    if not url or not key:
-        raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables must be set.")
+    if not is_supabase_configured():
+        raise ValueError("SUPABASE_URL and SUPABASE_KEY are not validly configured in .env.")
     return create_client(url, key)
 
 def upsert_iem(client: Client, name: str, description: str, features: dict, embedding: np.ndarray):

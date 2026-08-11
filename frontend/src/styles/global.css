@@ -5,8 +5,44 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: dark;
   }
   body {
     @apply bg-bgBase text-textPrimary font-body;
+  }
+
+  /* Custom Theme Scrollbar - Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2F394A #0B0F15;
+  }
+
+  /* Custom Theme Scrollbar - WebKit & Chromium Browsers */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0B0F15;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #252F3E;
+    border-radius: 9999px;
+    border: 2px solid #0B0F15;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #D2F85B;
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background: #b5db3e;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: #0B0F15;
   }
 }

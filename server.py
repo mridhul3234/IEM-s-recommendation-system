@@ -97,7 +97,8 @@ def search_api(q: str = Query(""), alpha: float = Query(0.5), top_k: int = Query
 
 @app.get("/iem/{name}")
 def get_iem_api(name: str):
-    use_supabase = os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_KEY")
+    from db import is_supabase_configured
+    use_supabase = is_supabase_configured()
     if not use_supabase:
         from data_manager import data_manager
         import numpy as np

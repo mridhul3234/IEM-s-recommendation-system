@@ -20,7 +20,8 @@ def fetch_search_candidates(q: str):
     search_corpus_vectors = data_manager.corpus_vectors
     search_corpus_embeddings = data_manager.corpus_embeddings
     
-    use_supabase = os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_KEY")
+    from db import is_supabase_configured
+    use_supabase = is_supabase_configured()
     
     if use_supabase and q.strip():
         try:

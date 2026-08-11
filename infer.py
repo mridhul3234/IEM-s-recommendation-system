@@ -95,7 +95,9 @@ def parse_acoustic_json(json_str: str) -> dict[str, float]:
 
 def infer_target_profile(query: str) -> dict[str, float]:
     """Infers the acoustic profile from a user query by orchestrating API calls."""
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    is_real_key = api_key and not api_key.startswith("your_") and not api_key.startswith("YOUR_") and api_key != "your_gemini_api_key_here"
+
     default_profile = {
         "sub_bass": 0.0, "bass": 0.0, "low_mids": 0.0, "mids": 0.0,
         "presence": 0.0, "treble": 0.0, "air": 0.0,
@@ -104,14 +106,14 @@ def infer_target_profile(query: str) -> dict[str, float]:
     
     prompt = PROMPT.format(query=query)
 
-    if api_key:
+    if is_real_key:
         try:
             result_str = call_gemini_api(prompt, api_key)
             return parse_acoustic_json(result_str)
-        except Exception:
-            print("Warning: All Gemini API model attempts failed or timed out. Attempting Local Ollama Fallback...")
+        except Exception as e:
+            print(f"Warning: Gemini API call failed ({e}). Attempting Local Ollama Fallback...")
     else:
-        print("Warning: GEMINI_API_KEY environment variable is missing. Attempting Local Ollama Fallback...")
+        print("Notice: GEMINI_API_KEY in .env is missing or set to placeholder. Please set your Gemini API key in .env.")
 
     try:
         result_str = call_ollama_fallback(prompt)
