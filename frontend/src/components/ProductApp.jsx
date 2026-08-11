@@ -58,7 +58,18 @@ export default function ProductApp() {
       {/* Header */}
       <div className="mb-8 border-b border-bgBorder pb-6 flex flex-col md:flex-row justify-between items-start md:items-end">
         <div>
-          <a href="/" className="font-mono text-xs text-textMuted hover:text-accentPrimary uppercase tracking-widest mb-4 inline-block">&larr; Back to Search</a>
+          <button 
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = '/';
+              }
+            }} 
+            className="font-mono text-xs text-textMuted hover:text-accentPrimary uppercase tracking-widest mb-4 inline-block bg-transparent border-none p-0 cursor-pointer"
+          >
+            &larr; Back to Search
+          </button>
           <h1 className="font-display text-4xl text-textPrimary tracking-wide uppercase">{iem.name}</h1>
           <div className="mt-3 flex items-center gap-4">
             {iem.features?.price && (

@@ -5,8 +5,11 @@ Handles connections and operations with the Supabase pgvector backend.
 """
 
 import os
+from dotenv import load_dotenv
 from supabase import create_client, Client
 import numpy as np
+
+load_dotenv()
 
 def get_client() -> Client:
     url = os.environ.get("SUPABASE_URL")

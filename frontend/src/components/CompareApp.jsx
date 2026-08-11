@@ -58,7 +58,18 @@ export default function CompareApp() {
       
       {/* Header */}
       <div className="mb-8 border-b border-bgBorder pb-6">
-        <a href="/" className="font-mono text-xs text-textMuted hover:text-accentPrimary uppercase tracking-widest mb-4 inline-block">&larr; Back to Search</a>
+        <button 
+          onClick={() => {
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              window.location.href = '/';
+            }
+          }} 
+          className="font-mono text-xs text-textMuted hover:text-accentPrimary uppercase tracking-widest mb-4 inline-block bg-transparent border-none p-0 cursor-pointer"
+        >
+          &larr; Back to Search
+        </button>
         <h1 className="font-display text-4xl text-textPrimary tracking-wide uppercase">Versus Mode</h1>
         <p className="font-body text-textMuted mt-2">Direct A/B comparison of acoustic profiles.</p>
       </div>

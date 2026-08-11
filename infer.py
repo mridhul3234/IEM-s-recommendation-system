@@ -8,8 +8,11 @@ Parses a natural language user query into an inferred acoustic target profile
 import json
 import os
 import pydantic
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+
+load_dotenv()
 
 class TargetProfile(pydantic.BaseModel):
     sub_bass: float

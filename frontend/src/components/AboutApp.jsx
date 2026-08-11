@@ -7,8 +7,8 @@ export default function AboutApp() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary relative">
       
-      {/* Dynamic 180-Frame Scroll Background */}
-      <ScrollFrameBackground />
+      {/* Dynamic 60 FPS Scroll Background - 40% Opacity for About Page */}
+      <ScrollFrameBackground opacity={0.4} />
 
       {/* Transparent Sticky Navbar */}
       <nav className="sticky top-0 flex items-center justify-between py-5 px-6 md:px-12 bg-transparent z-50 pointer-events-auto">

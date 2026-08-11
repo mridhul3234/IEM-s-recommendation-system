@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 
 const TOTAL_FRAMES = 356;
 
-export default function ScrollFrameBackground() {
+export default function ScrollFrameBackground({ opacity = 0.4 }) {
   const canvasRef = useRef(null);
   const imagesRef = useRef([]);
   const stateRef = useRef({
@@ -105,10 +105,11 @@ export default function ScrollFrameBackground() {
 
   return (
     <div className="fixed inset-0 w-full h-full z-0 pointer-events-none overflow-hidden bg-bgBase">
-      {/* Hardware-Accelerated 60 FPS HTML5 Canvas - 60% Opacity */}
+      {/* Hardware-Accelerated 60 FPS HTML5 Canvas */}
       <canvas 
         ref={canvasRef} 
-        className="w-full h-full opacity-60 transition-opacity duration-300"
+        style={{ opacity }}
+        className="w-full h-full transition-opacity duration-300"
       />
       {/* Minimal Top/Bottom Vignette for Edge Blending */}
       <div className="absolute inset-0 bg-gradient-to-t from-bgBase/10 via-transparent to-bgBase/10"></div>

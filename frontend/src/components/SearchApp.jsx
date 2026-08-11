@@ -72,6 +72,7 @@ export default function SearchApp() {
     sibilance_risk: 0, tonal_tilt: 0, bass_to_treble: 0
   };
 
+  const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [exactFeatures, setExactFeatures] = useState(DEFAULT_EXACT_FEATURES);
   const [priceTier, setPriceTier] = useState('all'); 
@@ -81,9 +82,52 @@ export default function SearchApp() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentTopK, setCurrentTopK] = useState(INITIAL_TOP_K);
   const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState(null);
   const [compareCart, setCompareCart] = useState([]);
   const [compareNotice, setCompareNotice] = useState(null);
+
+  // Restore search state from sessionStorage on mount
+  React.useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('last_search_state');
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.query !== undefined) setQuery(data.query);
+        if (data.exactFeatures) setExactFeatures(data.exactFeatures);
+        if (data.priceTier) setPriceTier(data.priceTier);
+        if (data.results && data.results.length > 0) setResults(data.results);
+        if (data.inferredFeatures) setInferredFeatures(data.inferredFeatures);
+        if (data.currentTopK) setCurrentTopK(data.currentTopK);
+        if (data.hasMore !== undefined) setHasMore(data.hasMore);
+
+        if (data.scrollY) {
+          setTimeout(() => {
+            window.scrollTo({ top: data.scrollY, behavior: 'auto' });
+          }, 150);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to restore search state", e);
+    }
+  }, []);
+
+  const saveSearchState = (overrides = {}) => {
+    try {
+      const stateToSave = {
+        query,
+        exactFeatures,
+        priceTier,
+        results,
+        inferredFeatures,
+        currentTopK,
+        hasMore,
+        scrollY: window.scrollY,
+        ...overrides
+      };
+      sessionStorage.setItem('last_search_state', JSON.stringify(stateToSave));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const runSearch = async (searchQuery, targetTopK = INITIAL_TOP_K, isLoadMore = false, selectedPriceTier = priceTier, isEqMode = false) => {
     const q = searchQuery.trim();
@@ -113,11 +157,18 @@ export default function SearchApp() {
       setInferredFeatures(data.inferred_features);
       setCurrentTopK(targetTopK);
 
-      if (data.results.length < targetTopK) {
-        setHasMore(false);
-      } else {
-        setHasMore(true);
-      }
+      const moreAvailable = data.results.length >= targetTopK;
+      setHasMore(moreAvailable);
+
+      saveSearchState({
+        query: q,
+        priceTier: selectedPriceTier,
+        results: data.results,
+        inferredFeatures: data.inferred_features,
+        currentTopK: targetTopK,
+        hasMore: moreAvailable,
+        scrollY: window.scrollY
+      });
     } catch (err) {
       setError(err.message);
     } finally {

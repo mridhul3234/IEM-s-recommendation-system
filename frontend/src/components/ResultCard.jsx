@@ -12,7 +12,17 @@ export default function ResultCard({ result, rank, isCompared, onToggleCompare }
           <div className="flex items-baseline justify-between mb-2">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-accentPrimary font-bold text-xl">0{rank}</span>
-              <a href={`/iem?name=${encodeURIComponent(result.name)}`} className="font-display text-2xl text-textPrimary tracking-wide uppercase hover:text-accentPrimary transition-colors cursor-pointer">
+              <a 
+                href={`/iem?name=${encodeURIComponent(result.name)}`} 
+                onClick={() => {
+                  try {
+                    const existing = JSON.parse(sessionStorage.getItem('last_search_state') || '{}');
+                    existing.scrollY = window.scrollY;
+                    sessionStorage.setItem('last_search_state', JSON.stringify(existing));
+                  } catch (e) {}
+                }}
+                className="font-display text-2xl text-textPrimary tracking-wide uppercase hover:text-accentPrimary transition-colors cursor-pointer"
+              >
                 {result.name}
               </a>
             </div>

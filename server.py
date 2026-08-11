@@ -8,6 +8,9 @@ import glob
 import os
 import sys
 import numpy as np
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
