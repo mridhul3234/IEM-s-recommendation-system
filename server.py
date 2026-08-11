@@ -36,8 +36,10 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Rate Limiting & Security Configuration
 # ---------------------------------------------------------------------------
-_ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
-_RATE_LIMIT_SEARCH_PER_MIN = int(os.environ.get("RATE_LIMIT_SEARCH", "30"))
+from config import settings, validate_config
+
+_ALLOWED_ORIGINS = settings.allowed_origins
+_RATE_LIMIT_SEARCH_PER_MIN = settings.rate_limit_search
 _IP_SEARCH_TIMESTAMPS: dict[str, list[float]] = defaultdict(list)
 
 # ---------------------------------------------------------------------------
@@ -47,6 +49,7 @@ from data_manager import data_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    validate_config(settings)
     data_manager.load_local_data()
     yield
 

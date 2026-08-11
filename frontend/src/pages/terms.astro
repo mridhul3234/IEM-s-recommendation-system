@@ -1,0 +1,44 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="Terms of Service | AcousticSearch"
+  description="Terms of Service for AcousticSearch IEM Recommendation Engine."
+>
+  <div className="max-w-4xl mx-auto px-6 py-20 relative z-10 text-textPrimary">
+    <a href="/" className="font-mono text-xs text-textMuted hover:text-accentPrimary uppercase tracking-widest mb-6 inline-block">
+      &larr; Back to Search
+    </a>
+    
+    <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight mb-6">
+      Terms of Service
+    </h1>
+    
+    <p className="font-mono text-xs text-textMuted uppercase mb-8">
+      Last Updated: August 11, 2026
+    </p>
+
+    <div className="space-y-6 font-body text-textMuted leading-relaxed text-sm md:text-base border-t border-white/10 pt-8">
+      <h2 className="font-display text-xl font-bold text-textPrimary">1. Acceptance of Terms</h2>
+      <p>
+        By accessing or using AcousticSearch, you agree to be bound by these Terms of Service. If you do not agree, please do not use the application.
+      </p>
+
+      <h2 className="font-display text-xl font-bold text-textPrimary">2. Use of Service</h2>
+      <p>
+        AcousticSearch is provided free of charge for informational and educational sound preference recommendations. You agree not to misuse the API through automated rate abuse, scraping, or malicious traffic.
+      </p>
+
+      <h2 className="font-display text-xl font-bold text-textPrimary">3. Audio Data & Measurement Attribution</h2>
+      <p>
+        Frequency response data is derived from open-source measurements provided by AutoEq (MIT Licensed, © Jaakko Pasanen) and community contributors including oratory1990. Recommendations are mathematically calculated approximations and should be used alongside personal listening.
+      </p>
+
+      <h2 className="font-display text-xl font-bold text-textPrimary">4. Disclaimer of Warranties</h2>
+      <p>
+        The service is provided "as is" and "as available" without warranties of any kind. AcousticSearch is not affiliated with any headphone manufacturer or retailer.
+      </p>
+    </div>
+  </div>
+</Layout>

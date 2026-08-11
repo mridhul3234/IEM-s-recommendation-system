@@ -15,11 +15,18 @@ from normalize import deviation_from_target, load_fr_csv, standard_grid
 from embed import embed_texts
 from db import get_client, upsert_iem
 
+from config import settings
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 TARGET_PATH = os.path.join(HERE, "sample_data", "targets", "Harman in-ear 2019.csv")
 IEM_DIR = os.path.join(HERE, "sample_data", "in-ear")
 
 def main():
+    if settings.is_production and "--confirm-production" not in sys.argv:
+        print("⚠️ WARNING: You are attempting to run migrations against a PRODUCTION environment!")
+        print("To proceed, re-run with the flag: python migrate_to_supabase.py --confirm-production")
+        sys.exit(1)
+
     try:
         client = get_client()
     except ValueError as e:

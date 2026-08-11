@@ -1,0 +1,50 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="Privacy Policy | AcousticSearch"
+  description="Privacy Policy for AcousticSearch IEM Recommendation Engine."
+>
+  <div className="max-w-4xl mx-auto px-6 py-20 relative z-10 text-textPrimary">
+    <a href="/" className="font-mono text-xs text-textMuted hover:text-accentPrimary uppercase tracking-widest mb-6 inline-block">
+      &larr; Back to Search
+    </a>
+    
+    <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight mb-6">
+      Privacy Policy
+    </h1>
+    
+    <p className="font-mono text-xs text-textMuted uppercase mb-8">
+      Last Updated: August 11, 2026
+    </p>
+
+    <div className="space-y-6 font-body text-textMuted leading-relaxed text-sm md:text-base border-t border-white/10 pt-8">
+      <h2 className="font-display text-xl font-bold text-textPrimary">1. Information We Collect</h2>
+      <p>
+        AcousticSearch is a privacy-focused public recommendation tool. We do not require account registration or store personal identity profiles. 
+        When you use our search engine, we process free-text sound preference queries to match acoustic targets.
+      </p>
+
+      <h2 className="font-display text-xl font-bold text-textPrimary">2. Technical & Analytics Logs</h2>
+      <p>
+        For security, rate limiting, and system reliability, our API servers record standard request IP addresses, browser User-Agent strings, and endpoint access timestamps. These logs are stored temporarily and automatically rotated.
+      </p>
+
+      <h2 className="font-display text-xl font-bold text-textPrimary">3. Third-Party AI & Vector Services</h2>
+      <p>
+        Natural language queries are translated into target feature vectors using Google Gemini API. Queries sent to the AI model do not contain personally identifiable information (PII).
+      </p>
+
+      <h2 className="font-display text-xl font-bold text-textPrimary">4. Cookies & Local Storage</h2>
+      <p>
+        AcousticSearch uses browser <code className="font-mono text-accentPrimary">sessionStorage</code> solely to preserve your recent search preferences and filter state during your active browsing session. We do not use cross-site tracking cookies or advertising pixels.
+      </p>
+
+      <h2 className="font-display text-xl font-bold text-textPrimary">5. Contact Us</h2>
+      <p>
+        If you have questions regarding this Privacy Policy, please contact us via our official repository or project channels.
+      </p>
+    </div>
+  </div>
+</Layout>

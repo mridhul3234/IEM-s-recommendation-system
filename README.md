@@ -6,7 +6,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/FastAPI-0.141+-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/Astro-5.0+-BC52EE?style=for-the-badge&logo=astro&logoColor=white" alt="Astro" />
   <img src="https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/TailwindCSS-3.4+-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
@@ -27,14 +27,15 @@ Audio enthusiasts and consumers often struggle to find In-Ear Monitors (IEMs) th
 
 ---
 
-## ✨ Features
+## ✨ Production Features & Safety
 
 - 🧠 **LLM Query Parsing**: Uses Google Gemini to infer 7 frequency band deviations (Sub-Bass to Air) + 3 derived acoustic signals (Sibilance Risk, Tonal Tilt, Bass-to-Treble Ratio).
 - ⚡ **Hybrid Recommendation Pipeline**: Combines dense semantic similarity with objective acoustic distance ($\alpha = 0.5$) to eliminate LLM hallucinations.
 - 🗄️ **Supabase + pgvector Integration**: Fast vector retrieval backed by PostgreSQL with graceful local offline fallback.
-- 📊 **Explainability & Visual Tuning Charts**: Dynamically renders match contributor badges (*BASS_MATCH*, *SMOOTH_TREBLE*) alongside SVG frequency response oscilloscope charts.
-- 🚀 **Interactive Quick Search Chips**: Built-in feature suggestions (`+ Very bassy`, `+ Bright & airy`, `+ Warm & punchy`) for instant one-click searches.
-- 🎨 **Custom Acoustic Design System**: Dark-mode navy and copper aesthetic tailored for high-end audio hardware presentation.
+- 🛡️ **Rate Limiting & Security Headers**: Enforces sliding-window IP rate limiting (30 search requests/min) + HTTP security response headers (`X-Frame-Options`, `X-Content-Type-Options`).
+- 🩺 **Health & Uptime Monitoring**: Exposes `/health` and `/api/health` endpoints returning system diagnostics and dataset counts.
+- ⚙️ **Fail-Fast Configuration**: Centralized `config.py` with environment file cascading (`.env.production`, `.env.staging`, `.env`).
+- 🎨 **Custom Acoustic Design System**: Dark-mode navy and copper aesthetic with React `ErrorBoundary` fallback protection and custom `/404`, `/privacy`, and `/terms` pages.
 
 ---
 
@@ -56,9 +57,9 @@ graph TD
 ## 🚀 Quick Start & Installation
 
 ### Prerequisites
-- **Python**: `3.10+`
+- **Python**: `3.10+` (Tested on 3.13)
 - **Node.js**: `v22+`
-- **API Keys**: Google Gemini API Key (`GEMINI_API_KEY`) & optional Supabase credentials (`SUPABASE_URL`, `SUPABASE_KEY`).
+- **Environment**: Copy `.env.example` to `.env` and fill in credentials.
 
 ### 1. Repository Setup & Backend
 ```bash
@@ -76,12 +77,7 @@ source venv/bin/activate
 # Install backend dependencies
 pip install -r requirements.txt
 
-# Set Environment Variables
-export GEMINI_API_KEY="your_gemini_api_key"
-export SUPABASE_URL="your_supabase_url"
-export SUPABASE_KEY="your_supabase_anon_key"
-
-# Launch Python FastAPI server (runs on http://0.0.0.0:8000)
+# Launch FastAPI server (runs on http://0.0.0.0:8000)
 python server.py
 ```
 
@@ -99,20 +95,24 @@ npm run dev
 
 ---
 
-## 📊 Evaluation & Metrics
+## 🧪 Testing & Verification
 
-The system includes a dedicated evaluation suite (`eval.py`) testing Precision@3 across diverse query archetypes. Grounding semantic retrieval with physical acoustic metrics ($\alpha = 0.5$) yields significantly higher accuracy compared to baseline semantic search:
+Run the full pytest suite (102 backend tests):
+```bash
+python -m pytest
+```
 
-| Metric | Pure Semantic NLP | Acoustic Math Only | **Hybrid Search ($\alpha = 0.5$)** |
-| :--- | :---: | :---: | :---: |
-| **Precision@3** | 62.5% | 75.0% | **100.0%** |
+Test Astro production build:
+```bash
+cd frontend && npm run build
+```
 
 ---
 
 ## 📜 Data Attribution & Licensing
 
 Frequency response measurement data is provided by [AutoEq](https://github.com/jaakkopasanen/AutoEq) (MIT Licensed, © Jaakko Pasanen).
-The sample measurements included in `sample_data/in-ear/` were measured by **oratory1990** and redistributed under open-source terms.
+Sample measurements in `sample_data/in-ear/` were measured by **oratory1990** and redistributed under open-source terms.
 
 ---
 

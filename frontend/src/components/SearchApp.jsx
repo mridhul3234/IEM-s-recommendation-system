@@ -670,6 +670,11 @@ export default function SearchApp() {
 
         <div className="max-w-[1400px] mx-auto border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono">
           <p>© {new Date().getFullYear()} AcousticSearch. All rights reserved.</p>
+          <div className="flex gap-4">
+            <a href="/privacy" className="hover:text-accentPrimary transition-colors">Privacy Policy</a>
+            <span className="text-textMuted/40">•</span>
+            <a href="/terms" className="hover:text-accentPrimary transition-colors">Terms of Use</a>
+          </div>
           <p className="text-textMuted/60">Crafted for Audiophiles & Music Enthusiasts</p>
         </div>
       </footer>
