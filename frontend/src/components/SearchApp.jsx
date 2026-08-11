@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, WarningCircle, SlidersHorizontal } from '@phosphor-icons/react';
 import ResultCard from './ResultCard';
 import EqSliderGrid from './EqSliderGrid';
-import ScrollFrameBackground from './ScrollFrameBackground';
+
+const ScrollFrameBackground = lazy(() => import('./ScrollFrameBackground'));
 
 const INITIAL_TOP_K = 3;
 const STEP_TOP_K = 3;
+
+const DEFAULT_EXACT_FEATURES = {
+  sub_bass: 0, bass: 0, low_mids: 0, mids: 0,
+  presence: 0, treble: 0, air: 0,
+  sibilance_risk: 0, tonal_tilt: 0, bass_to_treble: 0
+};
 
 const FAQ_ITEMS = [
   {
@@ -66,12 +73,6 @@ function FaqAccordionItem({ question, answer }) {
 }
 
 export default function SearchApp() {
-  const DEFAULT_EXACT_FEATURES = {
-    sub_bass: 0, bass: 0, low_mids: 0, mids: 0,
-    presence: 0, treble: 0, air: 0,
-    sibilance_risk: 0, tonal_tilt: 0, bass_to_treble: 0
-  };
-
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [exactFeatures, setExactFeatures] = useState(DEFAULT_EXACT_FEATURES);
@@ -84,6 +85,25 @@ export default function SearchApp() {
   const [hasMore, setHasMore] = useState(true);
   const [compareCart, setCompareCart] = useState([]);
   const [compareNotice, setCompareNotice] = useState(null);
+
+  const abortControllerRef = useRef(null);
+
+  const { cheaperResults, costlierResults, rankMap } = useMemo(() => {
+    const cheaper = [];
+    const costlier = [];
+    const ranks = new Map();
+
+    results.forEach((res, index) => {
+      ranks.set(res.name, index + 1);
+      if (res.features?.price < 500) {
+        cheaper.push(res);
+      } else {
+        costlier.push(res);
+      }
+    });
+
+    return { cheaperResults: cheaper, costlierResults: costlier, rankMap: ranks };
+  }, [results]);
 
   // Restore search state from sessionStorage on mount
   React.useEffect(() => {
@@ -133,6 +153,11 @@ export default function SearchApp() {
     const q = searchQuery.trim();
     if (!q && !isEqMode) return;
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     if (isLoadMore) {
       setLoadingMore(true);
     } else {
@@ -149,7 +174,7 @@ export default function SearchApp() {
       } else {
         url += `&q=${encodeURIComponent(q)}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: abortControllerRef.current.signal });
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
       
@@ -170,7 +195,9 @@ export default function SearchApp() {
         scrollY: window.scrollY
       });
     } catch (err) {
-      setError(err.message);
+      if (err.name !== 'AbortError') {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -222,7 +249,9 @@ export default function SearchApp() {
     <div className="min-h-[100dvh] flex flex-col bg-bgBase text-textPrimary selection:bg-accentPrimary/30 selection:text-accentPrimary relative">
       
       {/* Dynamic 180-Frame Scroll Background */}
-      <ScrollFrameBackground />
+      <Suspense fallback={null}>
+        <ScrollFrameBackground />
+      </Suspense>
 
       {/* Transparent Sticky Navbar */}
       <nav className="sticky top-0 flex items-center justify-between py-5 px-6 md:px-12 bg-transparent z-50 pointer-events-auto">
@@ -406,17 +435,17 @@ export default function SearchApp() {
               {results.length > 0 && (
                 <div className="space-y-16">
                   
-                  {results.filter(r => r.features?.price < 500).length > 0 && (
+                  {cheaperResults.length > 0 && (
                     <div>
                       <h3 className="font-display text-2xl font-light text-textPrimary tracking-wide mb-8 border-b border-white/10 pb-4">
                         Cheaper Picks <span className="text-textMuted text-lg ml-2 font-body">Under $500</span>
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {results.filter(r => r.features?.price < 500).map((res) => (
+                        {cheaperResults.map((res) => (
                           <ResultCard 
                             key={res.name} 
                             result={res} 
-                            rank={results.indexOf(res) + 1} 
+                            rank={rankMap.get(res.name) || 1} 
                             isCompared={compareCart.includes(res.name)}
                             onToggleCompare={() => handleToggleCompare(res.name)}
                           />
@@ -425,17 +454,17 @@ export default function SearchApp() {
                     </div>
                   )}
 
-                  {results.filter(r => !r.features?.price || r.features?.price >= 500).length > 0 && (
+                  {costlierResults.length > 0 && (
                     <div>
                       <h3 className="font-display text-2xl font-light text-textPrimary tracking-wide mb-8 border-b border-white/10 pb-4">
                         Costlier Picks <span className="text-textMuted text-lg ml-2 font-body">$500+</span>
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {results.filter(r => !r.features?.price || r.features?.price >= 500).map((res) => (
+                        {costlierResults.map((res) => (
                           <ResultCard 
                             key={res.name} 
                             result={res} 
-                            rank={results.indexOf(res) + 1}
+                            rank={rankMap.get(res.name) || 1}
                             isCompared={compareCart.includes(res.name)}
                             onToggleCompare={() => handleToggleCompare(res.name)}
                           />

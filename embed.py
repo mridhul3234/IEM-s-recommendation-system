@@ -33,13 +33,21 @@ def get_model():
             _model = SentenceTransformer(MODEL_NAME)
     return _model
 
+_cache: dict[str, list[float]] | None = None
+
 def load_cache() -> dict[str, list[float]]:
-    if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r") as f:
-            return json.load(f)
-    return {}
+    global _cache
+    if _cache is None:
+        if os.path.exists(CACHE_FILE):
+            with open(CACHE_FILE, "r") as f:
+                _cache = json.load(f)
+        else:
+            _cache = {}
+    return _cache
 
 def save_cache(cache: dict[str, list[float]]):
+    global _cache
+    _cache = cache
     with open(CACHE_FILE, "w") as f:
         json.dump(cache, f, indent=2)
 

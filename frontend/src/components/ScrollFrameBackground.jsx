@@ -17,24 +17,49 @@ export default function ScrollFrameBackground({ opacity = 0.4 }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Preload all 356 frames into memory
-    const images = [];
-    let loadedCount = 0;
-
-    for (let i = 1; i <= TOTAL_FRAMES; i++) {
-      const img = new Image();
-      const num = String(i).padStart(4, '0');
-      img.src = `/iem_frames/frame_${num}.jpg`;
-      img.onload = () => {
-        loadedCount++;
-        if (loadedCount === 1) {
-          // Draw first frame immediately
-          renderFrame(1);
-        }
-      };
-      images.push(img);
-    }
+    // Create placeholder array for image objects
+    const images = new Array(TOTAL_FRAMES);
     imagesRef.current = images;
+
+    let isUnmounted = false;
+
+    // Load initial frame immediately
+    const img1 = new Image();
+    const num1 = '0001';
+    img1.src = `/iem_frames/frame_${num1}.jpg`;
+    img1.onload = () => {
+      if (!isUnmounted) renderFrame(1);
+    };
+    images[0] = img1;
+
+    // Progressively load remaining frames in batches during idle periods
+    let nextIndexToLoad = 1; // 0-indexed frame 2
+    const BATCH_SIZE = 15;
+
+    const loadNextBatch = () => {
+      if (isUnmounted || nextIndexToLoad >= TOTAL_FRAMES) return;
+      const limit = Math.min(TOTAL_FRAMES, nextIndexToLoad + BATCH_SIZE);
+      for (let i = nextIndexToLoad; i < limit; i++) {
+        const img = new Image();
+        const num = String(i + 1).padStart(4, '0');
+        img.src = `/iem_frames/frame_${num}.jpg`;
+        images[i] = img;
+      }
+      nextIndexToLoad = limit;
+      if (nextIndexToLoad < TOTAL_FRAMES) {
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(loadNextBatch, { timeout: 1000 });
+        } else {
+          setTimeout(loadNextBatch, 100);
+        }
+      }
+    };
+
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(loadNextBatch, { timeout: 1000 });
+    } else {
+      setTimeout(loadNextBatch, 200);
+    }
 
     const resizeCanvas = () => {
       if (!canvas) return;
@@ -97,6 +122,7 @@ export default function ScrollFrameBackground({ opacity = 0.4 }) {
     }
 
     return () => {
+      isUnmounted = true;
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('scroll', handleScroll);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
