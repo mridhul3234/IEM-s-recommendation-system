@@ -26,6 +26,11 @@ from infer import infer_target_profile
 from search import hybrid_search
 from explain import get_top_contributors
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%SZ",
+)
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -83,6 +88,35 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
     return response
+
+
+# ---------------------------------------------------------------------------
+# Global Exception Handler (Sanitized 500 Responses)
+# ---------------------------------------------------------------------------
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled server exception on %s: %s", request.url.path, exc)
+    return Response(
+        content='{"error":"Internal Server Error","detail":"An unexpected server error occurred."}',
+        status_code=500,
+        media_type="application/json",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Health & Uptime Endpoints
+# ---------------------------------------------------------------------------
+@app.get("/health")
+@app.get("/api/health")
+def health_check():
+    from db import is_supabase_configured
+    return {
+        "status": "ok",
+        "service": "AcousticSearch API",
+        "supabase_configured": is_supabase_configured(),
+        "local_items_loaded": len(data_manager.iems) if data_manager.iems else 0,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
 
 
 # ---------------------------------------------------------------------------

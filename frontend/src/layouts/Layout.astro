@@ -2,25 +2,60 @@
 import '../styles/global.css';
 
 interface Props {
-	title: string;
+	title?: string;
+	description?: string;
+	image?: string;
 }
 
-const { title } = Astro.props;
+const { 
+	title = "AcousticSearch | IEM Recommendation Engine",
+	description = "AI-powered In-Ear Monitor (IEM) recommendation engine combining Google Gemini NLP, pgvector embeddings, and physical frequency response curve math.",
+	image = "/favicon.svg"
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url.origin);
 ---
 
+<!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="generator" content={Astro.generator} />
+
+		<!-- Primary Meta Tags -->
 		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonicalURL} />
+
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonicalURL} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={new URL(image, canonicalURL)} />
+
+		<!-- Twitter Card -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content={canonicalURL} />
+		<meta property="twitter:title" content={title} />
+		<meta property="twitter:description" content={description} />
+		<meta property="twitter:image" content={new URL(image, canonicalURL)} />
 		
+		<!-- Preconnect & Preload Fonts -->
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@200;300;400;600;700&display=swap">
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@200;300;400;600;700&display=swap" rel="stylesheet">
 	</head>
-	<body className="bg-bgBase min-h-screen selection:bg-accentPrimary/30 selection:text-accentPrimary">
-		<slot />
+	<body class="bg-bgBase min-h-screen selection:bg-accentPrimary/30 selection:text-accentPrimary">
+		<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 bg-accentPrimary text-black font-mono text-xs px-4 py-2 rounded-full z-[100] font-bold">
+			Skip to main content
+		</a>
+		<main id="main-content">
+			<slot />
+		</main>
 	</body>
 </html>

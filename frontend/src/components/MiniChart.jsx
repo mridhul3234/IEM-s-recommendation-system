@@ -63,7 +63,7 @@ export default function MiniChart({ features, targetFeatures, datasets }) {
 
   return (
     <div className="w-full bg-[#080b10] border border-[#1d2636] rounded-lg p-2 relative select-none">
-      <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} className="overflow-visible font-mono text-[10px]">
+      <svg role="img" aria-label="Frequency Response Curve Chart" width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} className="overflow-visible font-mono text-[10px]">
         <defs>
           {/* Red Glow Gradient Fill */}
           <linearGradient id="redGlowGradient" x1="0" y1="0" x2="0" y2="1">

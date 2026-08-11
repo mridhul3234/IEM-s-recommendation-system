@@ -202,3 +202,22 @@ class TestIemEndpoint:
         res = client.get("/iem/7Hz%20Timeless")
         data = res.json()
         assert isinstance(data.get("similar"), list)
+
+
+# ---------------------------------------------------------------------------
+# GET /health
+# ---------------------------------------------------------------------------
+
+class TestHealthEndpoint:
+    def test_health_check_returns_200(self, client):
+        res = client.get("/health")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "ok"
+        assert "timestamp" in data
+        assert "service" in data
+
+    def test_api_health_check_alias(self, client):
+        res = client.get("/api/health")
+        assert res.status_code == 200
+        assert res.json()["status"] == "ok"

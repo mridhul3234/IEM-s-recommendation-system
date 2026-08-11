@@ -1,25 +1,11 @@
 ---
+import Layout from '../layouts/Layout.astro';
 import SearchApp from '../components/SearchApp';
-import '../styles/global.css';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<meta name="description" content="AI-powered In-Ear Monitor (IEM) recommendation engine combining Google Gemini NLP, pgvector embeddings, and physical frequency response curve math." />
-		<title>AcousticSearch | IEM Recommendation Engine</title>
-		
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@200;300;400;600;700&display=swap">
-		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@200;300;400;600;700&display=swap" rel="stylesheet">
-	</head>
-	<body className="bg-bgBase min-h-screen selection:bg-accentPrimary/30 selection:text-accentPrimary">
-		<main>
-			<SearchApp client:load />
-		</main>
-	</body>
-</html>
+<Layout 
+	title="AcousticSearch | AI In-Ear Monitor Recommendation Engine"
+	description="Search, compare, and discover In-Ear Monitors (IEMs) using Google Gemini natural language processing, vector similarity embeddings, and frequency response curves."
+>
+	<SearchApp client:load />
+</Layout>

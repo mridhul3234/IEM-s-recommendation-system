@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, WarningCircle, SlidersHorizontal } from '@phosphor-icons/react';
 import ResultCard from './ResultCard';
 import EqSliderGrid from './EqSliderGrid';
+import ErrorBoundary from './ErrorBoundary';
 
 const ScrollFrameBackground = lazy(() => import('./ScrollFrameBackground'));
 
@@ -372,9 +373,11 @@ export default function SearchApp() {
               
               {/* Target Query */}
               <div className="flex-1 bg-black/20 border border-white/10 rounded-[1.25rem] p-4 flex flex-col focus-within:border-accentPrimary/50 focus-within:bg-black/30 transition-colors">
-                <label className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1">Target Sound</label>
+                <label htmlFor="target-sound-input" className="text-[10px] uppercase font-bold text-textMuted tracking-wider mb-1 ml-1">Target Sound</label>
                 <input 
+                  id="target-sound-input"
                   type="text" 
+                  aria-label="Target Sound Search"
                   placeholder="e.g. 'Very bassy but minimal treble'"
                   className="w-full bg-transparent text-textPrimary font-body font-medium text-lg outline-none placeholder-textPrimary/30 px-1"
                   value={query}
@@ -405,6 +408,7 @@ export default function SearchApp() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.92 }}
                 type="submit"
+                aria-label="Submit Search"
                 disabled={loading}
                 className="w-full md:w-[76px] h-[76px] shrink-0 bg-accentPrimary rounded-[1.25rem] flex items-center justify-center text-black hover:brightness-110 transition-all shadow-[0_0_20px_rgba(210,248,91,0.4)] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
@@ -434,66 +438,68 @@ export default function SearchApp() {
 
               {/* Results Grid */}
               {results.length > 0 && (
-                <div className="space-y-16">
-                  
-                  {cheaperResults.length > 0 && (
-                    <div>
-                      <h3 className="font-display text-2xl font-light text-textPrimary tracking-wide mb-8 border-b border-white/10 pb-4">
-                        Cheaper Picks <span className="text-textMuted text-lg ml-2 font-body">Under $500</span>
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {cheaperResults.map((res) => (
-                          <ResultCard 
-                            key={res.name} 
-                            result={res} 
-                            rank={rankMap.get(res.name) || 1} 
-                            isCompared={compareCart.includes(res.name)}
-                            onToggleCompare={() => handleToggleCompare(res.name)}
-                          />
-                        ))}
+                <ErrorBoundary>
+                  <div className="space-y-16">
+                    
+                    {cheaperResults.length > 0 && (
+                      <div>
+                        <h3 className="font-display text-2xl font-light text-textPrimary tracking-wide mb-8 border-b border-white/10 pb-4">
+                          Cheaper Picks <span className="text-textMuted text-lg ml-2 font-body">Under $500</span>
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {cheaperResults.map((res) => (
+                            <ResultCard 
+                              key={res.name} 
+                              result={res} 
+                              rank={rankMap.get(res.name) || 1} 
+                              isCompared={compareCart.includes(res.name)}
+                              onToggleCompare={() => handleToggleCompare(res.name)}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {costlierResults.length > 0 && (
-                    <div>
-                      <h3 className="font-display text-2xl font-light text-textPrimary tracking-wide mb-8 border-b border-white/10 pb-4">
-                        Costlier Picks <span className="text-textMuted text-lg ml-2 font-body">$500+</span>
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {costlierResults.map((res) => (
-                          <ResultCard 
-                            key={res.name} 
-                            result={res} 
-                            rank={rankMap.get(res.name) || 1}
-                            isCompared={compareCart.includes(res.name)}
-                            onToggleCompare={() => handleToggleCompare(res.name)}
-                          />
-                        ))}
+                    {costlierResults.length > 0 && (
+                      <div>
+                        <h3 className="font-display text-2xl font-light text-textPrimary tracking-wide mb-8 border-b border-white/10 pb-4">
+                          Costlier Picks <span className="text-textMuted text-lg ml-2 font-body">$500+</span>
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {costlierResults.map((res) => (
+                            <ResultCard 
+                              key={res.name} 
+                              result={res} 
+                              rank={rankMap.get(res.name) || 1}
+                              isCompared={compareCart.includes(res.name)}
+                              onToggleCompare={() => handleToggleCompare(res.name)}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {hasMore ? (
-                    <div className="flex justify-center mt-12">
-                      <motion.button
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.95 }}
-                        type="button"
-                        onClick={handleSuggestMore}
-                        disabled={loadingMore}
-                        className="px-8 py-4 bg-white/5 border border-white/10 hover:border-accentPrimary hover:bg-accentPrimary/5 text-textPrimary hover:text-accentPrimary font-mono uppercase tracking-wider text-xs rounded-xl transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                      >
-                        {loadingMore ? 'Loading...' : 'Load More IEMs'}
-                      </motion.button>
-                    </div>
-                  ) : (
-                    <div className="text-center font-mono text-xs text-textMuted uppercase tracking-widest mt-12 opacity-50">
-                      End of Recommendations
-                    </div>
-                  )}
-                  
-                </div>
+                    {hasMore ? (
+                      <div className="flex justify-center mt-12">
+                        <motion.button
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.95 }}
+                          type="button"
+                          onClick={handleSuggestMore}
+                          disabled={loadingMore}
+                          className="px-8 py-4 bg-white/5 border border-white/10 hover:border-accentPrimary hover:bg-accentPrimary/5 text-textPrimary hover:text-accentPrimary font-mono uppercase tracking-wider text-xs rounded-xl transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                        >
+                          {loadingMore ? 'Loading...' : 'Load More IEMs'}
+                        </motion.button>
+                      </div>
+                    ) : (
+                      <div className="text-center font-mono text-xs text-textMuted uppercase tracking-widest mt-12 opacity-50">
+                        End of Recommendations
+                      </div>
+                    )}
+                    
+                  </div>
+                </ErrorBoundary>
               )}
             </div>
           </motion.div>

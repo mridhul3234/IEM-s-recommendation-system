@@ -1,0 +1,29 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout 
+  title="404: Page Not Found | AcousticSearch"
+  description="The requested page could not be found on AcousticSearch."
+>
+  <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-6 py-20 relative z-10">
+    <div className="font-mono text-xs text-accentPrimary uppercase tracking-widest px-4 py-1.5 rounded-full bg-accentPrimary/10 border border-accentPrimary/20 mb-6">
+      404 Error
+    </div>
+    
+    <h1 className="font-display text-6xl md:text-8xl font-bold text-textPrimary tracking-tight mb-4 drop-shadow-2xl">
+      Page Not Found
+    </h1>
+    
+    <p className="font-body text-textMuted text-lg max-w-md mb-8 leading-relaxed">
+      The acoustic frequency profile you're looking for doesn't exist or has been moved.
+    </p>
+
+    <a 
+      href="/" 
+      className="bg-accentPrimary text-black px-8 py-3.5 rounded-full font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 transition-all shadow-[0_0_20px_rgba(210,248,91,0.4)]"
+    >
+      &larr; Back to Search Engine
+    </a>
+  </div>
+</Layout>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MiniChart from './MiniChart';
+import ErrorBoundary from './ErrorBoundary';
 
 const COLORS = ["#ef4444", "#3b82f6", "#10b981"]; // Red, Blue, Green
 
@@ -55,82 +56,84 @@ export default function CompareApp() {
   }));
 
   return (
-    <div className="max-w-6xl mx-auto mt-12 px-4 pb-16">
-      
-      {/* Header */}
-      <div className="mb-8 border-b border-bgBorder pb-6">
-        <button 
-          onClick={() => {
-            if (window.history.length > 1) {
-              window.history.back();
-            } else {
-              window.location.href = '/';
-            }
-          }} 
-          className="font-mono text-xs text-textMuted hover:text-accentPrimary uppercase tracking-widest mb-4 inline-block bg-transparent border-none p-0 cursor-pointer"
-        >
-          &larr; Back to Search
-        </button>
-        <h1 className="font-display text-4xl text-textPrimary tracking-wide uppercase">Versus Mode</h1>
-        <p className="font-body text-textMuted mt-2">Direct A/B comparison of acoustic profiles.</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-        {/* Unified Chart */}
-        <div className="lg:col-span-3 bg-bgSurface border border-bgBorder rounded-xl p-6 shadow-2xl flex flex-col justify-center min-h-[400px]">
-          <h3 className="font-mono text-xs text-textMuted uppercase tracking-widest mb-6">Overlay Frequency Response</h3>
-          <div className="transform scale-[1.3] origin-center mb-8 w-full max-w-full flex justify-center">
-             <div className="w-[340px] h-[190px]">
-                <MiniChart datasets={datasets} />
-             </div>
-          </div>
-          
-          <div className="flex justify-center gap-6 mt-8 border-t border-bgBorder/50 pt-6">
-            {datasets.map(ds => (
-              <div key={ds.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ds.color }}></div>
-                <span className="font-mono text-xs text-textPrimary">{ds.name}</span>
-              </div>
-            ))}
-          </div>
+    <ErrorBoundary>
+      <div className="max-w-6xl mx-auto mt-12 px-4 pb-16">
+        
+        {/* Header */}
+        <div className="mb-8 border-b border-bgBorder pb-6">
+          <button 
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = '/';
+              }
+            }} 
+            className="font-mono text-xs text-textMuted hover:text-accentPrimary uppercase tracking-widest mb-4 inline-block bg-transparent border-none p-0 cursor-pointer"
+          >
+            &larr; Back to Search
+          </button>
+          <h1 className="font-display text-4xl text-textPrimary tracking-wide uppercase">Versus Mode</h1>
+          <p className="font-body text-textMuted mt-2">Direct A/B comparison of acoustic profiles.</p>
         </div>
 
-        {/* Side-by-Side Comparison */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            {iems.map((iem, i) => (
-              <div key={iem.name} className="bg-bgSurface border border-bgBorder rounded-xl p-4 flex flex-col">
-                <div className="w-full h-1 mb-3 rounded-full" style={{ backgroundColor: COLORS[i] }}></div>
-                <h3 className="font-display text-lg text-textPrimary leading-tight mb-2">{iem.name}</h3>
-                
-                <div className="mt-auto pt-4 space-y-3">
-                  <div className="flex justify-between items-center border-b border-bgBorder/50 pb-1">
-                    <span className="font-mono text-xs text-textMuted">Price</span>
-                    <span className="font-mono text-sm text-textPrimary">${iem.features.price || '---'}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center border-b border-bgBorder/50 pb-1">
-                    <span className="font-mono text-xs text-textMuted">Data Source</span>
-                    <span className={`font-mono text-[10px] uppercase tracking-widest ${iem.features.acoustic_profile_source === 'autoeq' ? 'text-green-400' : 'text-accentPrimary'}`}>
-                      {iem.features.acoustic_profile_source === 'autoeq' ? 'AutoEQ' : 'LLM Est.'}
-                    </span>
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+          {/* Unified Chart */}
+          <div className="lg:col-span-3 bg-bgSurface border border-bgBorder rounded-xl p-6 shadow-2xl flex flex-col justify-center min-h-[400px]">
+            <h3 className="font-mono text-xs text-textMuted uppercase tracking-widest mb-6">Overlay Frequency Response</h3>
+            <div className="transform scale-[1.3] origin-center mb-8 w-full max-w-full flex justify-center">
+               <div className="w-[340px] h-[190px]">
+                  <MiniChart datasets={datasets} />
+               </div>
+            </div>
+            
+            <div className="flex justify-center gap-6 mt-8 border-t border-bgBorder/50 pt-6">
+              {datasets.map(ds => (
+                <div key={ds.name} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ds.color }}></div>
+                  <span className="font-mono text-xs text-textPrimary">{ds.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-                  <div className="pt-2">
-                     <span className="font-mono text-xs text-textMuted uppercase">Sub-bass</span>
-                     <div className="font-mono text-sm text-textPrimary">{(iem.features.sub_bass || 0).toFixed(1)} dB</div>
-                  </div>
-                  <div className="pt-1">
-                     <span className="font-mono text-xs text-textMuted uppercase">Treble</span>
-                     <div className="font-mono text-sm text-textPrimary">{(iem.features.treble || 0).toFixed(1)} dB</div>
+          {/* Side-by-Side Comparison */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              {iems.map((iem, i) => (
+                <div key={iem.name} className="bg-bgSurface border border-bgBorder rounded-xl p-4 flex flex-col">
+                  <div className="w-full h-1 mb-3 rounded-full" style={{ backgroundColor: COLORS[i] }}></div>
+                  <h3 className="font-display text-lg text-textPrimary leading-tight mb-2">{iem.name}</h3>
+                  
+                  <div className="mt-auto pt-4 space-y-3">
+                    <div className="flex justify-between items-center border-b border-bgBorder/50 pb-1">
+                      <span className="font-mono text-xs text-textMuted">Price</span>
+                      <span className="font-mono text-sm text-textPrimary">${iem.features.price || '---'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center border-b border-bgBorder/50 pb-1">
+                      <span className="font-mono text-xs text-textMuted">Data Source</span>
+                      <span className={`font-mono text-[10px] uppercase tracking-widest ${iem.features.acoustic_profile_source === 'autoeq' ? 'text-green-400' : 'text-accentPrimary'}`}>
+                        {iem.features.acoustic_profile_source === 'autoeq' ? 'AutoEQ' : 'LLM Est.'}
+                      </span>
+                    </div>
+
+                    <div className="pt-2">
+                       <span className="font-mono text-xs text-textMuted uppercase">Sub-bass</span>
+                       <div className="font-mono text-sm text-textPrimary">{(iem.features.sub_bass || 0).toFixed(1)} dB</div>
+                    </div>
+                    <div className="pt-1">
+                       <span className="font-mono text-xs text-textMuted uppercase">Treble</span>
+                       <div className="font-mono text-sm text-textPrimary">{(iem.features.treble || 0).toFixed(1)} dB</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
+
       </div>
-      
-    </div>
+    </ErrorBoundary>
   );
 }

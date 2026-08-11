@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MiniChart from './MiniChart';
 import ResultCard from './ResultCard';
+import ErrorBoundary from './ErrorBoundary';
 
 export default function ProductApp() {
   const [iem, setIem] = useState(null);
@@ -54,7 +55,8 @@ export default function ProductApp() {
   if (!iem) return null;
 
   return (
-    <div className="max-w-5xl mx-auto mt-12 px-4 pb-16">
+    <ErrorBoundary>
+      <div className="max-w-5xl mx-auto mt-12 px-4 pb-16">
       
       {/* Header */}
       <div className="mb-8 border-b border-bgBorder pb-6 flex flex-col md:flex-row justify-between items-start md:items-end">
@@ -136,6 +138,7 @@ export default function ProductApp() {
         </div>
       )}
 
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
