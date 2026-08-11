@@ -20,7 +20,8 @@ export default function ProductApp() {
 
     const fetchIem = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/iem/${encodeURIComponent(name)}`);
+        const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiBase}/iem/${encodeURIComponent(name)}`);
         if (!res.ok) throw new Error('Failed to fetch IEM details');
         const data = await res.json();
         

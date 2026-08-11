@@ -23,9 +23,10 @@ export default function CompareApp() {
 
     const fetchIems = async () => {
       try {
+        const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
         const fetched = [];
         for (const name of names) {
-          const res = await fetch(`http://localhost:8000/iem/${encodeURIComponent(name)}`);
+          const res = await fetch(`${apiBase}/iem/${encodeURIComponent(name)}`);
           if (!res.ok) throw new Error(`Failed to fetch ${name}`);
           const data = await res.json();
           if (data.error) throw new Error(data.error);

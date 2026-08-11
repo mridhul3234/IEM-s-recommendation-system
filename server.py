@@ -13,7 +13,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, Query, HTTPException, Response
+import time
+from collections import defaultdict
+from fastapi import FastAPI, Query, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from describe import describe
@@ -27,12 +29,14 @@ from explain import get_top_contributors
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# CORS origins — tighten for production
+# Rate Limiting & Security Configuration
 # ---------------------------------------------------------------------------
 _ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
+_RATE_LIMIT_SEARCH_PER_MIN = int(os.environ.get("RATE_LIMIT_SEARCH", "30"))
+_IP_SEARCH_TIMESTAMPS: dict[str, list[float]] = defaultdict(list)
 
 # ---------------------------------------------------------------------------
-# Lifespan (replaces deprecated on_event)
+# Lifespan
 # ---------------------------------------------------------------------------
 from data_manager import data_manager
 
@@ -49,6 +53,36 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def security_and_rate_limit_middleware(request: Request, call_next):
+    # 1. Rate limiting for /search route
+    if request.url.path == "/search":
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        # Clean timestamps older than 60s
+        _IP_SEARCH_TIMESTAMPS[client_ip] = [
+            ts for ts in _IP_SEARCH_TIMESTAMPS[client_ip] if now - ts < 60
+        ]
+        if len(_IP_SEARCH_TIMESTAMPS[client_ip]) >= _RATE_LIMIT_SEARCH_PER_MIN:
+            logger.warning("Rate limit exceeded for IP: %s", client_ip)
+            return Response(
+                content='{"detail":"Rate limit exceeded. Maximum 30 search requests per minute."}',
+                status_code=429,
+                media_type="application/json",
+            )
+        _IP_SEARCH_TIMESTAMPS[client_ip].append(now)
+
+    # 2. Process request
+    response: Response = await call_next(request)
+
+    # 3. Inject Security Headers
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
 
 
 # ---------------------------------------------------------------------------

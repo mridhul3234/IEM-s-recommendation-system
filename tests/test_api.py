@@ -132,6 +132,28 @@ class TestSearchEndpoint:
             price = item["features"].get("price", 0)
             assert price < 500, f"Expected price < 500, got {price}"
 
+    def test_security_headers(self, client):
+        res = client.get("/search?q=test")
+        assert res.headers.get("X-Frame-Options") == "DENY"
+        assert res.headers.get("X-Content-Type-Options") == "nosniff"
+        assert res.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+
+    def test_rate_limiting(self, client, monkeypatch):
+        import server
+        monkeypatch.setattr(server, "_RATE_LIMIT_SEARCH_PER_MIN", 2)
+        server._IP_SEARCH_TIMESTAMPS.clear()
+        
+        # 1st and 2nd should pass
+        res1 = client.get("/search?q=test1")
+        res2 = client.get("/search?q=test2")
+        assert res1.status_code == 200
+        assert res2.status_code == 200
+
+        # 3rd should be rate limited with HTTP 429
+        res3 = client.get("/search?q=test3")
+        assert res3.status_code == 429
+        assert "Rate limit exceeded" in res3.json()["detail"]
+
     def test_exact_features_mode(self, client):
         feats = json.dumps({
             "sub_bass": 2.0, "bass": 3.0, "low_mids": 0.0, "mids": 0.0,

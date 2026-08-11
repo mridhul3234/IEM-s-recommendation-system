@@ -168,7 +168,8 @@ export default function SearchApp() {
 
     try {
       const ts = Date.now();
-      let url = `http://localhost:8000/search?top_k=${targetTopK}&price_tier=${selectedPriceTier}&_t=${ts}`;
+      const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
+      let url = `${apiBase}/search?top_k=${targetTopK}&price_tier=${selectedPriceTier}&_t=${ts}`;
       if (isEqMode) {
         url += `&q=${encodeURIComponent(q || "")}&exact_features=${encodeURIComponent(JSON.stringify(exactFeatures))}`;
       } else {
