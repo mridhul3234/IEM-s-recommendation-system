@@ -23,8 +23,9 @@ services:
         value: "*"
 
   # 2. Astro Frontend Static Site
-  - type: static
+  - type: web
     name: acousticsearch-frontend
+    env: static
     plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
