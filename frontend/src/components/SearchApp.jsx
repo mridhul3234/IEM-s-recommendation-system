@@ -82,6 +82,7 @@ export default function SearchApp() {
   const [inferredFeatures, setInferredFeatures] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [currentTopK, setCurrentTopK] = useState(INITIAL_TOP_K);
   const [hasMore, setHasMore] = useState(true);
   const [compareCart, setCompareCart] = useState([]);
@@ -96,7 +97,8 @@ export default function SearchApp() {
 
     results.forEach((res, index) => {
       ranks.set(res.name, index + 1);
-      if (res.features?.price < 500) {
+      const priceVal = parseFloat(res.features?.price || 0);
+      if (priceVal > 0 && priceVal < 500) {
         cheaper.push(res);
       } else {
         costlier.push(res);
@@ -115,7 +117,10 @@ export default function SearchApp() {
         if (data.query !== undefined) setQuery(data.query);
         if (data.exactFeatures) setExactFeatures(data.exactFeatures);
         if (data.priceTier) setPriceTier(data.priceTier);
-        if (data.results && data.results.length > 0) setResults(data.results);
+        if (data.results && data.results.length > 0) {
+          setResults(data.results);
+          setHasSearched(true);
+        }
         if (data.inferredFeatures) setInferredFeatures(data.inferredFeatures);
         if (data.currentTopK) setCurrentTopK(data.currentTopK);
         if (data.hasMore !== undefined) setHasMore(data.hasMore);
@@ -159,6 +164,8 @@ export default function SearchApp() {
     }
     abortControllerRef.current = new AbortController();
 
+    setHasSearched(true);
+
     if (isLoadMore) {
       setLoadingMore(true);
     } else {
@@ -166,6 +173,8 @@ export default function SearchApp() {
       setResults([]);
     }
     setError(null);
+
+    const currentController = abortControllerRef.current;
 
     try {
       const ts = Date.now();
@@ -176,7 +185,7 @@ export default function SearchApp() {
       } else {
         url += `&q=${encodeURIComponent(q)}`;
       }
-      const res = await fetch(url, { signal: abortControllerRef.current.signal });
+      const res = await fetch(url, { signal: currentController.signal });
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
       
@@ -196,17 +205,24 @@ export default function SearchApp() {
         hasMore: moreAvailable,
         scrollY: window.scrollY
       });
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        const isNetworkErr = err.message?.toLowerCase().includes('failed to fetch');
-        const displayErr = isNetworkErr
-          ? `Unable to connect to search API at ${apiBase}. Please verify python server.py is running on port 8000.`
-          : err.message;
-        setError(displayErr);
+
+      if (!isLoadMore) {
+        setTimeout(() => {
+          document.getElementById('search-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
       }
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      const isNetworkErr = err.message?.toLowerCase().includes('failed to fetch');
+      const displayErr = isNetworkErr
+        ? `Unable to connect to search API at ${import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000'}. Please verify python server.py is running on port 8000.`
+        : err.message;
+      setError(displayErr);
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (abortControllerRef.current === currentController) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
@@ -429,16 +445,24 @@ export default function SearchApp() {
 
       {/* Search Results Section - Transparent Outer Section */}
       <AnimatePresence>
-        {(results.length > 0 || error || loading) && (
+        {(hasSearched || results.length > 0 || error || loading) && (
           <motion.div 
+            id="search-results"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="w-full bg-transparent relative z-10 px-6 md:px-12 py-16"
+            className="w-full bg-transparent relative z-10 px-6 md:px-12 py-16 scroll-mt-6"
           >
             <div className="max-w-[1200px] mx-auto">
               
               {error && <div className="text-red-400 font-mono mb-8 p-4 bg-red-500/10 rounded-xl border border-red-500/20">{error}</div>}
+
+              {hasSearched && !loading && !error && results.length === 0 && (
+                <div className="text-center font-mono p-12 bg-white/5 border border-white/10 rounded-2xl">
+                  <p className="text-textPrimary text-base font-semibold mb-2">No matching IEMs found for your search query.</p>
+                  <p className="text-xs text-textMuted">Try adjusting your sound target terms or clearing price filters.</p>
+                </div>
+              )}
 
               {/* Results Grid */}
               {results.length > 0 && (
