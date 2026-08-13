@@ -35,7 +35,11 @@ export default function CompareApp() {
         }
         setIems(fetched);
       } catch (err) {
-        setError(err.message);
+        const isNetworkErr = err.message?.toLowerCase().includes('failed to fetch');
+        const displayErr = isNetworkErr
+          ? `Unable to connect to API. Please verify python server.py is running on port 8000.`
+          : err.message;
+        setError(displayErr);
       } finally {
         setLoading(false);
       }

@@ -58,7 +58,7 @@ app = FastAPI(title="IEM Recommendation Engine API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
-    allow_methods=["GET"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 

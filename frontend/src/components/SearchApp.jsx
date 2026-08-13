@@ -198,7 +198,11 @@ export default function SearchApp() {
       });
     } catch (err) {
       if (err.name !== 'AbortError') {
-        setError(err.message);
+        const isNetworkErr = err.message?.toLowerCase().includes('failed to fetch');
+        const displayErr = isNetworkErr
+          ? `Unable to connect to search API at ${apiBase}. Please verify python server.py is running on port 8000.`
+          : err.message;
+        setError(displayErr);
       }
     } finally {
       setLoading(false);
