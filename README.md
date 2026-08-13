@@ -64,8 +64,8 @@ graph TD
 ### 1. Repository Setup & Backend
 ```bash
 # Clone repository
-git clone https://github.com/your-username/acoustic-search.git
-cd acoustic-search
+git clone https://github.com/mridhul3234/IEM-s-recommendation-system.git
+cd IEM-s-recommendation-system
 
 # Create & activate Python virtual environment
 python -m venv venv
@@ -106,6 +106,16 @@ Test Astro production build:
 ```bash
 cd frontend && npm run build
 ```
+
+---
+
+## 🔌 Key API Endpoints
+
+| Method | Endpoint | Description | Query Parameters / Payload |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/search` | Hybrid semantic + acoustic match search | `q` (text), `alpha` (weight), `top_k` (limit), `price_tier`, `exact_features` |
+| `GET` | `/iem/{name}` | Fetch detailed metadata & 5 similar IEMs | Path parameter `name` |
+| `GET` | `/health` | System health check & dataset counts | None |
 
 ---
 
