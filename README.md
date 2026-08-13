@@ -1,4 +1,4 @@
-# 🎧 AcousticSearch — AI IEM Recommendation Engine
+# AcousticSearch — AI IEM Recommendation Engine
 
 <p align="center">
   <b>Translate natural language sound preferences into mathematically grounded In-Ear Monitor recommendations.</b>
@@ -16,7 +16,7 @@
 
 ---
 
-## 💡 Overview
+## Overview
 
 Audio enthusiasts and consumers often struggle to find In-Ear Monitors (IEMs) that match their subjective sound preferences. Relying solely on audiophile jargon (*"warm," "V-shaped," "sibilant"*) or interpreting raw frequency response (FR) graphs requires deep domain expertise.
 
@@ -27,19 +27,19 @@ Audio enthusiasts and consumers often struggle to find In-Ear Monitors (IEMs) th
 
 ---
 
-## ✨ Production Features & Safety
+## Production Features & Safety
 
-- 🧠 **LLM Query Parsing**: Uses Google Gemini to infer 7 frequency band deviations (Sub-Bass to Air) + 3 derived acoustic signals (Sibilance Risk, Tonal Tilt, Bass-to-Treble Ratio).
-- ⚡ **Hybrid Recommendation Pipeline**: Combines dense semantic similarity with objective acoustic distance ($\alpha = 0.5$) to eliminate LLM hallucinations.
-- 🗄️ **Supabase + pgvector Integration**: Fast vector retrieval backed by PostgreSQL with graceful local offline fallback.
-- 🛡️ **Rate Limiting & Security Headers**: Enforces sliding-window IP rate limiting (30 search requests/min) + HTTP security response headers (`X-Frame-Options`, `X-Content-Type-Options`).
-- 🩺 **Health & Uptime Monitoring**: Exposes `/health` and `/api/health` endpoints returning system diagnostics and dataset counts.
-- ⚙️ **Fail-Fast Configuration**: Centralized `config.py` with environment file cascading (`.env.production`, `.env.staging`, `.env`).
-- 🎨 **Custom Acoustic Design System**: Dark-mode navy and copper aesthetic with React `ErrorBoundary` fallback protection and custom `/404`, `/privacy`, and `/terms` pages.
+- **LLM Query Parsing**: Uses Google Gemini to infer 7 frequency band deviations (Sub-Bass to Air) + 3 derived acoustic signals (Sibilance Risk, Tonal Tilt, Bass-to-Treble Ratio).
+- **Hybrid Recommendation Pipeline**: Combines dense semantic similarity with objective acoustic distance ($\alpha = 0.5$) to eliminate LLM hallucinations.
+- **Supabase + pgvector Integration**: Fast vector retrieval backed by PostgreSQL with graceful local offline fallback.
+- **Rate Limiting & Security Headers**: Enforces sliding-window IP rate limiting (30 search requests/min) + HTTP security response headers (`X-Frame-Options`, `X-Content-Type-Options`).
+- **Health & Uptime Monitoring**: Exposes `/health` and `/api/health` endpoints returning system diagnostics and dataset counts.
+- **Fail-Fast Configuration**: Centralized `config.py` with environment file cascading (`.env.production`, `.env.staging`, `.env`).
+- **Custom Acoustic Design System**: Dark-mode navy and copper aesthetic with React `ErrorBoundary` fallback protection and custom `/404`, `/privacy`, and `/terms` pages.
 
 ---
 
-## 🛠️ Architecture Pipeline
+## Architecture Pipeline
 
 ```mermaid
 graph TD
@@ -54,7 +54,7 @@ graph TD
 
 ---
 
-## 🚀 Quick Start & Installation
+## Quick Start & Installation
 
 ### Prerequisites
 - **Python**: `3.10+` (Tested on 3.13)
@@ -95,7 +95,7 @@ npm run dev
 
 ---
 
-## 🧪 Testing & Verification
+## Testing & Verification
 
 Run the full pytest suite (102 backend tests):
 ```bash
@@ -109,7 +109,7 @@ cd frontend && npm run build
 
 ---
 
-## 🔌 Key API Endpoints
+## Key API Endpoints
 
 | Method | Endpoint | Description | Query Parameters / Payload |
 | :--- | :--- | :--- | :--- |
@@ -119,7 +119,7 @@ cd frontend && npm run build
 
 ---
 
-## 📜 Data Attribution & Licensing
+## Data Attribution & Licensing
 
 Frequency response measurement data is provided by [AutoEq](https://github.com/jaakkopasanen/AutoEq) (MIT Licensed, © Jaakko Pasanen).
 Sample measurements in `sample_data/in-ear/` were measured by **oratory1990** and redistributed under open-source terms.
