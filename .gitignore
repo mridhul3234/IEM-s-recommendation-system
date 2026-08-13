@@ -16,9 +16,6 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
-embeddings_cache.json
-descriptions_cache.json
-*.cache.json
 
 # Node / Frontend Build Outputs & Caches
 node_modules/

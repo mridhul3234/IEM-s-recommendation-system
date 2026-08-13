@@ -49,7 +49,7 @@ def save_cache(cache: dict[str, list[float]]):
     global _cache
     _cache = cache
     with open(CACHE_FILE, "w") as f:
-        json.dump(cache, f, indent=2)
+        json.dump(cache, f, separators=(',', ':'))
 
 def embed_texts(texts: list[str]) -> np.ndarray:
     """
