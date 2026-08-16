@@ -7,18 +7,19 @@ Handles loading, parsing, and caching of the local fallback IEM dataset.
 import glob
 import logging
 import os
+from pathlib import Path
 import numpy as np
 
-from describe import describe
-from features import extract_features, to_vector
-from normalize import deviation_from_target, load_fr_csv, standard_grid
-from embed import embed_texts
+from .describe import describe
+from .features import extract_features, to_vector
+from .normalize import deviation_from_target, load_fr_csv, standard_grid
+from .embed import embed_texts
 
 logger = logging.getLogger(__name__)
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-TARGET_PATH = os.path.join(HERE, "sample_data", "targets", "Harman in-ear 2019.csv")
-IEM_DIR = os.path.join(HERE, "sample_data", "in-ear")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+TARGET_PATH = PROJECT_ROOT / "data" / "sample_data" / "targets" / "Harman in-ear 2019.csv"
+IEM_DIR = PROJECT_ROOT / "data" / "sample_data" / "in-ear"
 
 class DataManager:
     def __init__(self):
@@ -44,7 +45,7 @@ class DataManager:
         self.target = load_fr_csv(TARGET_PATH, name="Harman in-ear 2019")
         self.grid = standard_grid()
 
-        iem_paths = sorted(glob.glob(os.path.join(IEM_DIR, "*.csv")))
+        iem_paths = sorted(glob.glob(str(IEM_DIR / "*.csv")))
         if not iem_paths:
             logger.warning("No IEM CSV files found in %s", IEM_DIR)
 

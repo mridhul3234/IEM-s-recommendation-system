@@ -8,10 +8,8 @@ network dependencies, so they must be fully hermetic.
 
 import numpy as np
 import pytest
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from features import (
+from acousticsearch.features import (
     band_averages, sibilance_risk, tonal_tilt,
     bass_to_treble_ratio, extract_features, to_vector,
     FEATURE_ORDER, BANDS

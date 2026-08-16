@@ -9,8 +9,6 @@ so tests run without network or GPU.
 import json
 import numpy as np
 import pytest
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 # ---------------------------------------------------------------------------
@@ -40,7 +38,7 @@ MOCK_DESCRIPTIONS = [
 @pytest.fixture(autouse=True)
 def patch_data_manager(monkeypatch):
     """Make data_manager return a small in-memory dataset."""
-    import data_manager as dm
+    from acousticsearch import data_manager as dm
     mock_vecs = np.random.rand(len(MOCK_IEM_DATA), 10)
     mock_embs = np.random.rand(len(MOCK_IEM_DATA), 384)
     monkeypatch.setattr(dm.data_manager, "iems", MOCK_IEM_DATA)
@@ -52,14 +50,14 @@ def patch_data_manager(monkeypatch):
 @pytest.fixture(autouse=True)
 def patch_embed(monkeypatch):
     """Replace embed_texts with a fast random embedding."""
-    import embed
+    from acousticsearch import embed
     monkeypatch.setattr(embed, "embed_texts", lambda texts: np.random.rand(len(texts), 384))
 
 
 @pytest.fixture(autouse=True)
 def patch_infer(monkeypatch):
     """Replace infer_target_profile with a neutral profile."""
-    import infer
+    from acousticsearch import infer
     neutral = {
         "sub_bass": 0.0, "bass": 0.0, "low_mids": 0.0, "mids": 0.0,
         "presence": 0.0, "treble": 0.0, "air": 0.0,
@@ -71,7 +69,7 @@ def patch_infer(monkeypatch):
 @pytest.fixture(autouse=True)
 def patch_supabase(monkeypatch):
     """Always report Supabase as NOT configured → use local fallback."""
-    import db
+    from acousticsearch import db
     monkeypatch.setattr(db, "is_supabase_configured", lambda: False)
 
 
@@ -79,7 +77,7 @@ def patch_supabase(monkeypatch):
 def client():
     from fastapi.testclient import TestClient
     import importlib
-    import server as srv
+    from acousticsearch import server as srv
     importlib.reload(srv)
     return TestClient(srv.app)
 
@@ -144,7 +142,7 @@ class TestSearchEndpoint:
         assert res.json()["detail"] == "Origin is not allowed"
 
     def test_rate_limiting(self, client, monkeypatch):
-        import server
+        from acousticsearch import server
         monkeypatch.setattr(server, "_RATE_LIMIT_SEARCH_PER_MIN", 2)
         server._IP_SEARCH_TIMESTAMPS.clear()
         

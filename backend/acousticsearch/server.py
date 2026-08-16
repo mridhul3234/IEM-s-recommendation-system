@@ -4,28 +4,20 @@ server.py
 FastAPI server that exposes /search and /iem/{name} endpoints to the frontend.
 """
 
-import os
 import logging
 
 import numpy as np
 from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-
-load_dotenv()
-
 import time
 from collections import OrderedDict, deque
 from threading import Lock
 from fastapi import FastAPI, Query, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from describe import describe
-from features import extract_features, to_vector
-from normalize import deviation_from_target, load_fr_csv, standard_grid
-from embed import embed_texts
-from infer import infer_target_profile
-from search import hybrid_search
-from explain import get_top_contributors
+from .features import to_vector
+from .infer import infer_target_profile
+from .search import hybrid_search
+from .explain import get_top_contributors
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,7 +29,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Rate Limiting & Security Configuration
 # ---------------------------------------------------------------------------
-from config import settings, validate_config
+from .config import settings, validate_config
 
 _ALLOWED_ORIGINS = settings.allowed_origins
 _RATE_LIMIT_SEARCH_PER_MIN = settings.rate_limit_search
@@ -48,12 +40,12 @@ _RATE_LIMIT_LOCK = Lock()
 # ---------------------------------------------------------------------------
 # Lifespan
 # ---------------------------------------------------------------------------
-from data_manager import data_manager
+from .data_manager import data_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     validate_config(settings)
-    from db import is_supabase_configured
+    from .db import is_supabase_configured
     if is_supabase_configured():
         # Production must serve its measured database, not a partial local
         # corpus whose descriptions would trigger extra embedding work.
@@ -131,7 +123,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/health")
 @app.get("/api/health")
 def health_check():
-    from db import is_supabase_configured
+    from .db import is_supabase_configured
     return {
         "status": "ok",
         "service": "AcousticSearch API",
@@ -173,7 +165,7 @@ def search_api(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    from search_repository import (
+    from .search_repository import (
         SearchRepositoryUnavailable,
         fetch_search_candidates,
         filter_by_price_tier,
@@ -234,13 +226,13 @@ def search_api(
 @app.get("/iem/{name}")
 def get_iem_api(name: str, response: Response):
     response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
-    from db import is_supabase_configured
+    from .db import is_supabase_configured
 
     if not is_supabase_configured():
         return _get_iem_local(name)
 
     try:
-        from db import get_client, search_iems
+        from .db import get_client, search_iems
         client = get_client()
 
         res = client.table("iems").select("*").eq("name", name).execute()
@@ -312,17 +304,3 @@ def _get_iem_local(name: str) -> dict:
         "iem": {"name": iem_name, "description": iem_desc, "features": iem_feats},
         "similar": similar_items,
     }
-
-
-# ---------------------------------------------------------------------------
-# Entrypoint
-# ---------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "server:app",
-        host=os.environ.get("BACKEND_HOST", "0.0.0.0"),
-        port=int(os.environ.get("BACKEND_PORT", 8000)),
-        reload=True,
-    )

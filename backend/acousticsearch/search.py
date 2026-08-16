@@ -7,7 +7,7 @@ Performs semantic search to find the closest matching texts for a given query.
 from __future__ import annotations
 
 import numpy as np
-from embed import embed_texts
+from .embed import embed_texts
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Compute cosine similarity between vector a and matrix b."""

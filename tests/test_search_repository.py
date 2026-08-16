@@ -1,16 +1,10 @@
 """Repository behavior when the configured data source is unavailable."""
 
-import os
-import sys
-
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 def test_configured_repository_failure_does_not_fall_back_to_local(monkeypatch):
-    import db
-    import search_repository
+    from acousticsearch import db, search_repository
 
     monkeypatch.setattr(db, "is_supabase_configured", lambda: True)
     monkeypatch.setattr(db, "get_client", lambda: (_ for _ in ()).throw(RuntimeError("offline")))

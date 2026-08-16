@@ -5,7 +5,7 @@ Unit tests for config.py module and fail-fast startup validation.
 """
 
 import pytest
-from config import Settings, validate_config, _is_placeholder
+from acousticsearch.config import Settings, validate_config, _is_placeholder
 
 
 class TestConfigValidation:

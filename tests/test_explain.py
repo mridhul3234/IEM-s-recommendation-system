@@ -4,11 +4,9 @@ tests/test_explain.py
 Unit tests for explain.py — get_top_contributors.
 """
 
-import sys, os
 import pytest
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from explain import get_top_contributors
+from acousticsearch.explain import get_top_contributors
 
 
 # ---------------------------------------------------------------------------
@@ -101,11 +99,11 @@ class TestIsSupabaseConfigured:
     """Test the placeholder-detection logic without making any network calls."""
 
     def _call(self, url: str, key: str, monkeypatch) -> bool:
-        import db
+        from acousticsearch import db
         monkeypatch.setenv("SUPABASE_URL", url)
         monkeypatch.setenv("SUPABASE_KEY", key)
         # db intentionally reads centralized config.settings.
-        import config
+        from acousticsearch import config
         import importlib
         importlib.reload(config)
         importlib.reload(db)

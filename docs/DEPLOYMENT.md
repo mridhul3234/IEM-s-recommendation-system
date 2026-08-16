@@ -10,7 +10,7 @@ This guide details the deployment architecture, CI/CD pipeline, environment conf
 
 | Environment | Purpose | Trigger | API Base URL | DB Backend |
 |---|---|---|---|---|
-| **Development** | Local testing & dev | Local `npm run dev` / `python server.py` | `http://localhost:8000` | Local CSV fallback / Dev Supabase |
+| **Development** | Local testing & dev | Local `npm run dev` / `python -m uvicorn acousticsearch.server:app --app-dir backend` | `http://localhost:8000` | Local CSV fallback / Dev Supabase |
 | **Staging** | Pre-release verification | Manual host deployment | Your staging API URL | Staging Supabase |
 | **Production** | Live audiophile traffic | Host deployment from an approved commit | Your production API URL | Production Supabase pgvector |
 
@@ -42,7 +42,7 @@ Configure the following secrets in **GitHub Repo Settings -> Secrets and variabl
 
 ### Backend (FastAPI Python) — e.g., Render / Railway / Docker
 - **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `python -m uvicorn server:app --host 0.0.0.0 --port $PORT`
+- **Start Command**: `python -m uvicorn acousticsearch.server:app --app-dir backend --host 0.0.0.0 --port $PORT`
 - **Health Check Path**: `/health` (Zero-downtime rolling cutover waits for HTTP 200 `{"status": "ok"}`).
 
 ### Frontend (Astro Static Site) — e.g., Cloudflare Pages / Vercel / Netlify
@@ -111,5 +111,5 @@ The CI workflow will verify tests. Trigger the rollback using your hosting provi
    ```
 5. Re-run migration validation if needed:
    ```bash
-   python migrate_to_supabase.py --confirm-production --price-catalog reviewed_prices.json
+   python scripts/migrate_to_supabase.py --confirm-production --price-catalog reviewed_prices.json
    ```

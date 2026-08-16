@@ -8,7 +8,7 @@
 ## 2. The Architecture (How it Works)
 "Here's how we built it. We started by parsing raw frequency response data—measured by oratory1990 and distributed by AutoEq—and calculating its deviation against the Harman neutral target. 
 
-Instead of letting an LLM hallucinate answers based on brand hype, we use Google's Gemini to translate the user's natural language query into a 10-dimensional acoustic feature vector. We then embed the query using sentence-transformers and run a rapid semantic retrieval against our Supabase `pgvector` database."
+Instead of letting an LLM hallucinate answers based on brand hype, we use Google's Gemini to translate the user's natural language query into a 10-dimensional acoustic feature vector. We then create a Gemini embedding and run semantic retrieval against our Supabase `pgvector` database."
 
 ## 3. The Secret Sauce (Hybrid Ranking)
 "But pure semantic search isn't enough for audio precision. Our engine uses a **Hybrid Search Pipeline**. We take the top candidates from the vector database and rerank them locally by computing the Euclidean distance between the user's inferred acoustic target and the actual, measured frequency response of the IEM. 

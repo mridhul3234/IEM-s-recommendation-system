@@ -12,14 +12,17 @@ Usage:
 import glob
 import os
 import sys
+from pathlib import Path
 
-from describe import describe
-from features import extract_features
-from normalize import deviation_from_target, load_fr_csv, standard_grid
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-TARGET_PATH = os.path.join(HERE, "sample_data", "targets", "Harman in-ear 2019.csv")
-IEM_DIR = os.path.join(HERE, "sample_data", "in-ear")
+from acousticsearch.describe import describe
+from acousticsearch.features import extract_features
+from acousticsearch.normalize import deviation_from_target, load_fr_csv, standard_grid
+
+TARGET_PATH = PROJECT_ROOT / "data" / "sample_data" / "targets" / "Harman in-ear 2019.csv"
+IEM_DIR = PROJECT_ROOT / "data" / "sample_data" / "in-ear"
 
 def main():
     if hasattr(sys.stdout, 'reconfigure'):
@@ -32,7 +35,7 @@ def main():
     target = load_fr_csv(TARGET_PATH, name="Harman in-ear 2019")
     grid = standard_grid()
     
-    iem_paths = sorted(glob.glob(os.path.join(IEM_DIR, "*.csv")))
+    iem_paths = sorted(glob.glob(str(IEM_DIR / "*.csv")))
     if not iem_paths:
         print("No IEM data found.")
         sys.exit(1)

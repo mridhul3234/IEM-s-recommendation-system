@@ -9,10 +9,8 @@ import os
 import tempfile
 import numpy as np
 import pytest
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from normalize import load_fr_csv, resample_to_grid, standard_grid, deviation_from_target, FRCurve
+from acousticsearch.normalize import load_fr_csv, resample_to_grid, standard_grid, deviation_from_target, FRCurve
 
 
 # ---------------------------------------------------------------------------

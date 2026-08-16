@@ -6,7 +6,7 @@ Handles connections and operations with the Supabase pgvector backend.
 
 from supabase import create_client, Client
 import numpy as np
-from config import settings
+from .config import settings
 
 def is_supabase_configured() -> bool:
     return settings.is_supabase_configured

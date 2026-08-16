@@ -7,10 +7,8 @@ We mock all external API calls to keep tests hermetic.
 
 import json
 import pytest
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from infer import parse_acoustic_json
+from acousticsearch.infer import parse_acoustic_json
 
 EXPECTED_KEYS = {
     "sub_bass", "bass", "low_mids", "mids", "presence",
@@ -59,41 +57,41 @@ class TestInferTargetProfile:
 
     def test_falls_back_to_default_when_no_key(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "")
-        from infer import infer_target_profile
+        from acousticsearch.infer import infer_target_profile
         result = infer_target_profile("warm bass IEM")
         assert result == DEFAULT_PROFILE
 
     def test_returns_dict_with_placeholder_key(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "your_gemini_api_key_here")
-        from infer import infer_target_profile
+        from acousticsearch.infer import infer_target_profile
         result = infer_target_profile("test")
         assert isinstance(result, dict)
         assert set(result.keys()) == EXPECTED_KEYS
 
     def test_gemini_success_path(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "AIzaSyFakeButFormatCorrect12345678")
-        monkeypatch.setattr("infer.call_gemini_api", lambda prompt, key: self._good_response())
-        from infer import infer_target_profile
+        monkeypatch.setattr("acousticsearch.infer.call_gemini_api", lambda prompt, key: self._good_response())
+        from acousticsearch.infer import infer_target_profile
         result = infer_target_profile("warm")
         for k in EXPECTED_KEYS:
             assert k in result
 
     def test_gemini_failure_returns_default_without_ollama_delay(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "AIzaSyFakeButFormatCorrect12345678")
-        monkeypatch.setattr("infer.call_gemini_api", lambda p, k: (_ for _ in ()).throw(Exception("API fail")))
-        from infer import infer_target_profile
+        monkeypatch.setattr("acousticsearch.infer.call_gemini_api", lambda p, k: (_ for _ in ()).throw(Exception("API fail")))
+        from acousticsearch.infer import infer_target_profile
         result = infer_target_profile("test query")
         assert result == DEFAULT_PROFILE
 
     def test_both_fail_returns_default(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "AIzaSyFakeButFormatCorrect12345678")
-        monkeypatch.setattr("infer.call_gemini_api", lambda p, k: (_ for _ in ()).throw(Exception("fail")))
-        from infer import infer_target_profile
+        monkeypatch.setattr("acousticsearch.infer.call_gemini_api", lambda p, k: (_ for _ in ()).throw(Exception("fail")))
+        from acousticsearch.infer import infer_target_profile
         result = infer_target_profile("test")
         assert result == DEFAULT_PROFILE
 
     def test_empty_query_handled(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "")
-        from infer import infer_target_profile
+        from acousticsearch.infer import infer_target_profile
         result = infer_target_profile("")
         assert isinstance(result, dict)

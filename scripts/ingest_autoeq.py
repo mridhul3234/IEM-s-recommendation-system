@@ -11,11 +11,12 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 
-from db import get_client
-from normalize import load_fr_csv, deviation_from_target, standard_grid
-from features import extract_features
+from acousticsearch.db import get_client
+from acousticsearch.features import extract_features
+from acousticsearch.normalize import load_fr_csv, deviation_from_target, standard_grid
 
 AUTOEQ_RAW_URL = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/"
 
@@ -52,8 +53,7 @@ def main() -> None:
 
     matches = load_approved_matches(args.approved_matches)
     client = get_client()
-    root = Path(__file__).resolve().parents[1]
-    target = load_fr_csv(root / "sample_data" / "targets" / "Harman in-ear 2019.csv", name="Harman target")
+    target = load_fr_csv(PROJECT_ROOT / "data" / "sample_data" / "targets" / "Harman in-ear 2019.csv", name="Harman target")
     grid = standard_grid()
     updated = 0
 

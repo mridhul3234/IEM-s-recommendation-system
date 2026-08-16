@@ -13,16 +13,19 @@ import argparse
 import glob
 import os
 import sys
+from pathlib import Path
 
-from describe import describe
-from features import extract_features
-from normalize import deviation_from_target, load_fr_csv, standard_grid
-from embed import embed_texts
-from search import semantic_search
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-TARGET_PATH = os.path.join(HERE, "sample_data", "targets", "Harman in-ear 2019.csv")
-IEM_DIR = os.path.join(HERE, "sample_data", "in-ear")
+from acousticsearch.describe import describe
+from acousticsearch.embed import embed_texts
+from acousticsearch.features import extract_features
+from acousticsearch.normalize import deviation_from_target, load_fr_csv, standard_grid
+from acousticsearch.search import semantic_search
+
+TARGET_PATH = PROJECT_ROOT / "data" / "sample_data" / "targets" / "Harman in-ear 2019.csv"
+IEM_DIR = PROJECT_ROOT / "data" / "sample_data" / "in-ear"
 
 def main():
     if hasattr(sys.stdout, 'reconfigure'):
@@ -37,8 +40,8 @@ def main():
     print(f"✅ [Parsed query: '{args.query}']")
 
     # 1. Infer acoustic profile from text
-    from infer import infer_target_profile
-    from features import to_vector
+    from acousticsearch.infer import infer_target_profile
+    from acousticsearch.features import to_vector
     inferred_features = infer_target_profile(args.query)
     inferred_vector = to_vector(inferred_features)
     print(f"✅ [Inferred acoustic target vector from query]")
@@ -52,12 +55,12 @@ def main():
     if args.db:
         # DB PATH
         print("✅ [Connecting to Supabase (Cloud Mode)]")
-        from db import get_client, search_iems
+        from acousticsearch.db import get_client, search_iems
         try:
             client = get_client()
             
             # Embed the query to do vector search in DB
-            from embed import embed_texts
+            from acousticsearch.embed import embed_texts
             query_emb = embed_texts([args.query])[0]
             
             # Use match_iems RPC to get top candidates semantically
@@ -97,7 +100,7 @@ def main():
         target = load_fr_csv(TARGET_PATH, name="Harman in-ear 2019")
         grid = standard_grid()
         
-        iem_paths = sorted(glob.glob(os.path.join(IEM_DIR, "*.csv")))
+        iem_paths = sorted(glob.glob(str(IEM_DIR / "*.csv")))
         if not iem_paths:
             print("No IEM data found in sample_data/in-ear/")
             sys.exit(1)
@@ -121,13 +124,13 @@ def main():
         corpus_vectors = np.array(corpus_vectors_list)
 
         # Embed corpus
-        from embed import embed_texts
+        from acousticsearch.embed import embed_texts
         corpus_embeddings = embed_texts(descriptions)
         print(f"✅ [Embedded corpus descriptions]")
 
     # Hybrid Search
-    from search import hybrid_search
-    from explain import get_top_contributors
+    from acousticsearch.search import hybrid_search
+    from acousticsearch.explain import get_top_contributors
 
     results = hybrid_search(
         query=args.query,

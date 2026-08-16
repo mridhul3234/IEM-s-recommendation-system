@@ -1,11 +1,16 @@
-import glob, os, numpy as np
-from normalize import load_fr_csv, standard_grid, deviation_from_target
-from features import _band_mask, SIBILANCE_BAND
+import glob, os, sys, numpy as np
+from pathlib import Path
 
-target = load_fr_csv('sample_data/targets/Harman in-ear 2019.csv')
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+
+from acousticsearch.features import _band_mask, SIBILANCE_BAND
+from acousticsearch.normalize import load_fr_csv, standard_grid, deviation_from_target
+
+target = load_fr_csv(PROJECT_ROOT / 'data' / 'sample_data' / 'targets' / 'Harman in-ear 2019.csv')
 grid = standard_grid()
 
-for p in glob.glob('sample_data/in-ear/*.csv'):
+for p in glob.glob(str(PROJECT_ROOT / 'data' / 'sample_data' / 'in-ear' / '*.csv')):
     f, d = deviation_from_target(load_fr_csv(p), target, grid)
     m = _band_mask(f, *SIBILANCE_BAND)
     base = float(np.mean(d[_band_mask(f, 2000, 5000)]))

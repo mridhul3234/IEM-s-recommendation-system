@@ -22,8 +22,19 @@ Audio enthusiasts and consumers often struggle to find In-Ear Monitors (IEMs) th
 
 **AcousticSearch** bridges this gap:
 1. Translates free-text human queries into a 10-dimensional mathematical acoustic target.
-2. Performs **Hybrid Vector Search** combining dense semantic text embeddings (`sentence-transformers/all-MiniLM-L6-v2`) with 10-band Euclidean acoustic distance calculations.
+2. Performs **Hybrid Vector Search** combining Gemini embeddings with 10-band Euclidean acoustic distance calculations.
 3. Renders explainable match breakdowns and interactive **SVG oscilloscope tuning graphs** comparing target curves against measured IEM responses.
+
+## Repository Layout
+
+```text
+backend/acousticsearch/  FastAPI application and search domain logic
+data/sample_data/        Versioned measurement fixtures and target curves
+docs/                    Deployment guide, project notes, and demo material
+scripts/                 Migration, ingestion, evaluation, and CLI utilities
+tests/                   Backend test suite
+frontend/                Astro/React application (kept separate from backend)
+```
 
 ---
 
@@ -33,7 +44,7 @@ Audio enthusiasts and consumers often struggle to find In-Ear Monitors (IEMs) th
 - **Hybrid Recommendation Pipeline**: Combines dense semantic similarity with objective acoustic distance ($\alpha = 0.5$) to eliminate LLM hallucinations.
 - **Supabase + pgvector Integration**: Fast vector retrieval backed by PostgreSQL, with a measured local sample available for offline development.
 - **Verified data pipeline**: Retail listings are exported for human review only; acoustic profiles require an imported measurement and prices require an approved source record.
-- **Lean deployment**: Remote Gemini embeddings replace the PyTorch runtime; after deployment, re-index the Supabase corpus with `migrate_to_supabase.py` so its vectors use `gemini-embedding-001:384`.
+- **Lean deployment**: Remote Gemini embeddings replace the PyTorch runtime; after deployment, re-index the Supabase corpus with `python scripts/migrate_to_supabase.py` so its vectors use `gemini-embedding-001:384`.
 - **Rate Limiting & Security Headers**: Enforces sliding-window IP rate limiting (30 search requests/min) + HTTP security response headers (`X-Frame-Options`, `X-Content-Type-Options`).
 - **Health & Uptime Monitoring**: Exposes `/health` and `/api/health` endpoints returning system diagnostics and dataset counts.
 - **Fail-Fast Configuration**: Centralized `config.py` with environment file cascading (`.env.production`, `.env.staging`, `.env`).
@@ -46,7 +57,7 @@ Audio enthusiasts and consumers often struggle to find In-Ear Monitors (IEMs) th
 ```mermaid
 graph TD
     A[User Free-Text Query] --> B[Gemini LLM Parser]
-    A --> C[MiniLM-L6-v2 Embedding Model]
+    A --> C[Gemini Embedding Model]
     B -->|Infer 10D Target Vector| D[Hybrid Reranker]
     C -->|384D Query Vector| E[(Supabase pgvector / Local Corpus)]
     E -->|Semantic Candidate Retrieval| D
@@ -80,7 +91,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Launch FastAPI server (runs on http://0.0.0.0:8000)
-python server.py
+python -m uvicorn acousticsearch.server:app --app-dir backend --reload
 ```
 
 ### 2. Frontend Development Server
@@ -99,7 +110,7 @@ npm run dev
 
 ## Testing & Verification
 
-Run the full pytest suite (102 backend tests):
+Run the full pytest suite:
 ```bash
 python -m pytest
 ```
@@ -124,7 +135,7 @@ cd frontend && npm run build
 ## Data Attribution & Licensing
 
 Frequency response measurement data is provided by [AutoEq](https://github.com/jaakkopasanen/AutoEq) (MIT Licensed, © Jaakko Pasanen).
-Sample measurements in `sample_data/in-ear/` were measured by **oratory1990** and redistributed under open-source terms.
+Sample measurements in `data/sample_data/in-ear/` were measured by **oratory1990** and redistributed under open-source terms.
 
 ---
 

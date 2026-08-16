@@ -7,9 +7,9 @@ Encapsulates data fetching from Supabase and business-logic filters.
 import logging
 import numpy as np
 
-from embed import embed_texts
-from features import to_vector
-from data_manager import data_manager
+from .embed import embed_texts
+from .features import to_vector
+from .data_manager import data_manager
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +54,12 @@ def fetch_search_candidates(q: str, semantic_weight: float = 0.5):
     Returns:
         tuple: (iems_data, descriptions, corpus_vectors, corpus_embeddings)
     """
-    from db import is_supabase_configured
+    from .db import is_supabase_configured
     if is_supabase_configured():
         if not (q.strip() or semantic_weight == 0.0):
             return [], [], np.empty((0, 10)), np.empty((0, 384))
         try:
-            from db import get_client, list_iems, search_iems
+            from .db import get_client, list_iems, search_iems
             client = get_client()
             if semantic_weight == 0.0:
                 db_results = list_iems(client)
