@@ -17,7 +17,7 @@ from .embed import embed_texts
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TARGET_PATH = PROJECT_ROOT / "data" / "sample_data" / "targets" / "Harman in-ear 2019.csv"
 IEM_DIR = PROJECT_ROOT / "data" / "sample_data" / "in-ear"
 

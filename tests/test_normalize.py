@@ -10,7 +10,7 @@ import tempfile
 import numpy as np
 import pytest
 
-from acousticsearch.normalize import load_fr_csv, resample_to_grid, standard_grid, deviation_from_target, FRCurve
+from backend.normalize import load_fr_csv, resample_to_grid, standard_grid, deviation_from_target, FRCurve
 
 
 # ---------------------------------------------------------------------------

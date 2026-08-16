@@ -9,7 +9,7 @@ network dependencies, so they must be fully hermetic.
 import numpy as np
 import pytest
 
-from acousticsearch.features import (
+from backend.features import (
     band_averages, sibilance_risk, tonal_tilt,
     bass_to_treble_ratio, extract_features, to_vector,
     FEATURE_ORDER, BANDS

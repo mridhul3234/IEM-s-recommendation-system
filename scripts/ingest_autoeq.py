@@ -12,11 +12,11 @@ import urllib.request
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from acousticsearch.db import get_client
-from acousticsearch.features import extract_features
-from acousticsearch.normalize import load_fr_csv, deviation_from_target, standard_grid
+from backend.db import get_client
+from backend.features import extract_features
+from backend.normalize import load_fr_csv, deviation_from_target, standard_grid
 
 AUTOEQ_RAW_URL = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/"
 

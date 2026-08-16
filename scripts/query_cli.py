@@ -16,13 +16,13 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from acousticsearch.describe import describe
-from acousticsearch.embed import embed_texts
-from acousticsearch.features import extract_features
-from acousticsearch.normalize import deviation_from_target, load_fr_csv, standard_grid
-from acousticsearch.search import semantic_search
+from backend.describe import describe
+from backend.embed import embed_texts
+from backend.features import extract_features
+from backend.normalize import deviation_from_target, load_fr_csv, standard_grid
+from backend.search import semantic_search
 
 TARGET_PATH = PROJECT_ROOT / "data" / "sample_data" / "targets" / "Harman in-ear 2019.csv"
 IEM_DIR = PROJECT_ROOT / "data" / "sample_data" / "in-ear"
@@ -40,8 +40,8 @@ def main():
     print(f"✅ [Parsed query: '{args.query}']")
 
     # 1. Infer acoustic profile from text
-    from acousticsearch.infer import infer_target_profile
-    from acousticsearch.features import to_vector
+    from backend.infer import infer_target_profile
+    from backend.features import to_vector
     inferred_features = infer_target_profile(args.query)
     inferred_vector = to_vector(inferred_features)
     print(f"✅ [Inferred acoustic target vector from query]")
@@ -55,12 +55,12 @@ def main():
     if args.db:
         # DB PATH
         print("✅ [Connecting to Supabase (Cloud Mode)]")
-        from acousticsearch.db import get_client, search_iems
+        from backend.db import get_client, search_iems
         try:
             client = get_client()
             
             # Embed the query to do vector search in DB
-            from acousticsearch.embed import embed_texts
+            from backend.embed import embed_texts
             query_emb = embed_texts([args.query])[0]
             
             # Use match_iems RPC to get top candidates semantically
@@ -124,13 +124,13 @@ def main():
         corpus_vectors = np.array(corpus_vectors_list)
 
         # Embed corpus
-        from acousticsearch.embed import embed_texts
+        from backend.embed import embed_texts
         corpus_embeddings = embed_texts(descriptions)
         print(f"✅ [Embedded corpus descriptions]")
 
     # Hybrid Search
-    from acousticsearch.search import hybrid_search
-    from acousticsearch.explain import get_top_contributors
+    from backend.search import hybrid_search
+    from backend.explain import get_top_contributors
 
     results = hybrid_search(
         query=args.query,

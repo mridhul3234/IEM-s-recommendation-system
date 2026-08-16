@@ -11,14 +11,14 @@ import numpy as np
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from acousticsearch.describe import describe
-from acousticsearch.embed import embed_texts
-from acousticsearch.features import extract_features, to_vector
-from acousticsearch.infer import infer_target_profile
-from acousticsearch.normalize import deviation_from_target, load_fr_csv, standard_grid
-from acousticsearch.search import hybrid_search
+from backend.describe import describe
+from backend.embed import embed_texts
+from backend.features import extract_features, to_vector
+from backend.infer import infer_target_profile
+from backend.normalize import deviation_from_target, load_fr_csv, standard_grid
+from backend.search import hybrid_search
 
 TARGET_PATH = PROJECT_ROOT / "data" / "sample_data" / "targets" / "Harman in-ear 2019.csv"
 IEM_DIR = PROJECT_ROOT / "data" / "sample_data" / "in-ear"

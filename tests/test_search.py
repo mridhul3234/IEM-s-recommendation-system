@@ -8,7 +8,7 @@ and hybrid_search. All pure-math functions; no I/O or network.
 import numpy as np
 import pytest
 
-from acousticsearch.search import cosine_similarity, acoustic_similarity, hybrid_search
+from backend.search import cosine_similarity, acoustic_similarity, hybrid_search
 
 
 # ---------------------------------------------------------------------------
@@ -115,7 +115,7 @@ class TestHybridSearch:
         def mock_embed(texts):
             return query_emb[np.newaxis, :]
 
-        monkeypatch.setattr("acousticsearch.search.embed_texts", mock_embed)
+        monkeypatch.setattr("backend.search.embed_texts", mock_embed)
 
         corpus_vecs = np.random.rand(10, 10)
         results = hybrid_search(
@@ -132,7 +132,7 @@ class TestHybridSearch:
         corpus_embs = self._make_corpus(5)
         query_emb = corpus_embs[0]
 
-        monkeypatch.setattr("acousticsearch.search.embed_texts", lambda t: query_emb[np.newaxis, :])
+        monkeypatch.setattr("backend.search.embed_texts", lambda t: query_emb[np.newaxis, :])
 
         corpus_vecs = np.random.rand(5, 10)
         results = hybrid_search(
@@ -155,7 +155,7 @@ class TestHybridSearch:
         corpus_embs = self._make_corpus(n)
         # All embeddings same → semantic scores identical
         uniform_emb = np.ones((1, 384)) / np.sqrt(384)
-        monkeypatch.setattr("acousticsearch.search.embed_texts", lambda t: uniform_emb)
+        monkeypatch.setattr("backend.search.embed_texts", lambda t: uniform_emb)
 
         corpus_vecs = np.random.rand(n, 10)
         target = np.zeros(10)
@@ -176,7 +176,7 @@ class TestHybridSearch:
     def test_top_k_greater_than_corpus(self, monkeypatch):
         """top_k > corpus size should return all items."""
         corpus_embs = self._make_corpus(3)
-        monkeypatch.setattr("acousticsearch.search.embed_texts", lambda t: corpus_embs[0][np.newaxis, :])
+        monkeypatch.setattr("backend.search.embed_texts", lambda t: corpus_embs[0][np.newaxis, :])
 
         corpus_vecs = np.random.rand(3, 5)
         results = hybrid_search(

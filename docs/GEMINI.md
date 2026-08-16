@@ -3,7 +3,7 @@
 You are working on **AcousticSearch**, an AI-powered In-Ear Monitor (IEM) Recommendation Engine. Read this document before making any changes.
 
 ## Core Architecture
-1. **Backend**: Python package at `backend/acousticsearch`, using `fastapi`, `uvicorn`, and the Google Gemini API. Run it with `python -m uvicorn acousticsearch.server:app --app-dir backend`.
+1. **Backend**: Python package at `backend`, using `fastapi`, `uvicorn`, and the Google Gemini API. Run it with `python -m uvicorn backend.server:app`.
 2. **Frontend**: Astro v5 + React + TailwindCSS v3 application. It uses a custom "Acoustic" design language with deep space navy and copper accents. It runs on `http://localhost:4321` via `npm run dev`.
 3. **Database**: Supabase PostgreSQL with `pgvector` extension for semantic matching.
 

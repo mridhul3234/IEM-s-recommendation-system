@@ -28,7 +28,7 @@ Audio enthusiasts and consumers often struggle to find In-Ear Monitors (IEMs) th
 ## Repository Layout
 
 ```text
-backend/acousticsearch/  FastAPI application and search domain logic
+backend/                FastAPI application and search domain logic
 data/sample_data/        Versioned measurement fixtures and target curves
 docs/                    Deployment guide, project notes, and demo material
 scripts/                 Migration, ingestion, evaluation, and CLI utilities
@@ -91,7 +91,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Launch FastAPI server (runs on http://0.0.0.0:8000)
-python -m uvicorn acousticsearch.server:app --app-dir backend --reload
+python -m uvicorn backend.server:app --reload
 ```
 
 ### 2. Frontend Development Server

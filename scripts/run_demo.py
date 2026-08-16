@@ -17,11 +17,11 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from acousticsearch.describe import describe
-from acousticsearch.features import extract_features
-from acousticsearch.normalize import deviation_from_target, load_fr_csv, standard_grid
+from backend.describe import describe
+from backend.features import extract_features
+from backend.normalize import deviation_from_target, load_fr_csv, standard_grid
 
 TARGET_PATH = PROJECT_ROOT / "data" / "sample_data" / "targets" / "Harman in-ear 2019.csv"
 IEM_DIR = PROJECT_ROOT / "data" / "sample_data" / "in-ear"

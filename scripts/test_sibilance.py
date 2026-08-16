@@ -2,10 +2,10 @@ import glob, os, sys, numpy as np
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from acousticsearch.features import _band_mask, SIBILANCE_BAND
-from acousticsearch.normalize import load_fr_csv, standard_grid, deviation_from_target
+from backend.features import _band_mask, SIBILANCE_BAND
+from backend.normalize import load_fr_csv, standard_grid, deviation_from_target
 
 target = load_fr_csv(PROJECT_ROOT / 'data' / 'sample_data' / 'targets' / 'Harman in-ear 2019.csv')
 grid = standard_grid()

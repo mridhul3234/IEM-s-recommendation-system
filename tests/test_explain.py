@@ -6,7 +6,7 @@ Unit tests for explain.py — get_top_contributors.
 
 import pytest
 
-from acousticsearch.explain import get_top_contributors
+from backend.explain import get_top_contributors
 
 
 # ---------------------------------------------------------------------------
@@ -99,11 +99,11 @@ class TestIsSupabaseConfigured:
     """Test the placeholder-detection logic without making any network calls."""
 
     def _call(self, url: str, key: str, monkeypatch) -> bool:
-        from acousticsearch import db
+        from backend import db
         monkeypatch.setenv("SUPABASE_URL", url)
         monkeypatch.setenv("SUPABASE_KEY", key)
         # db intentionally reads centralized config.settings.
-        from acousticsearch import config
+        from backend import config
         import importlib
         importlib.reload(config)
         importlib.reload(db)
