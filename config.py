@@ -31,7 +31,11 @@ def _is_placeholder(val: str) -> bool:
     if not val:
         return True
     val_strip = val.strip()
-    return any(val_strip.startswith(p) for p in _PLACEHOLDER_PREFIXES)
+    return (
+        any(val_strip.startswith(p) for p in _PLACEHOLDER_PREFIXES)
+        or "your-project-id" in val_strip
+        or "your_supabase" in val_strip
+    )
 
 
 class Settings(NamedTuple):
@@ -43,6 +47,7 @@ class Settings(NamedTuple):
     backend_port: int
     allowed_origins: list[str]
     rate_limit_search: int
+    rate_limit_max_clients: int
 
     @property
     def is_production(self) -> bool:
@@ -63,7 +68,7 @@ class Settings(NamedTuple):
 
 
 def load_settings() -> Settings:
-    origins_raw = os.environ.get("ALLOWED_ORIGINS", "*")
+    origins_raw = os.environ.get("ALLOWED_ORIGINS", "http://localhost:4321,http://localhost:3000")
     origins = [o.strip() for o in origins_raw.split(",") if o.strip()]
 
     try:
@@ -75,6 +80,10 @@ def load_settings() -> Settings:
         rate_limit = int(os.environ.get("RATE_LIMIT_SEARCH", "30"))
     except ValueError:
         rate_limit = 30
+    try:
+        max_clients = int(os.environ.get("RATE_LIMIT_MAX_CLIENTS", "10000"))
+    except ValueError:
+        max_clients = 10000
 
     return Settings(
         app_env=APP_ENV,
@@ -85,6 +94,7 @@ def load_settings() -> Settings:
         backend_port=port,
         allowed_origins=origins,
         rate_limit_search=rate_limit,
+        rate_limit_max_clients=max(1, max_clients),
     )
 
 
@@ -104,6 +114,8 @@ def validate_config(s: Settings = settings) -> None:
             missing.append("GEMINI_API_KEY")
         if not s.is_supabase_configured:
             missing.append("SUPABASE_URL / SUPABASE_KEY")
+        if not s.allowed_origins or "*" in s.allowed_origins:
+            missing.append("a non-wildcard ALLOWED_ORIGINS")
 
         if missing:
             error_msg = (

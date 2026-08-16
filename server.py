@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import time
-from collections import defaultdict
+from collections import OrderedDict, deque
+from threading import Lock
 from fastapi import FastAPI, Query, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -40,7 +41,9 @@ from config import settings, validate_config
 
 _ALLOWED_ORIGINS = settings.allowed_origins
 _RATE_LIMIT_SEARCH_PER_MIN = settings.rate_limit_search
-_IP_SEARCH_TIMESTAMPS: dict[str, list[float]] = defaultdict(list)
+_RATE_LIMIT_MAX_CLIENTS = settings.rate_limit_max_clients
+_IP_SEARCH_TIMESTAMPS: OrderedDict[str, deque[float]] = OrderedDict()
+_RATE_LIMIT_LOCK = Lock()
 
 # ---------------------------------------------------------------------------
 # Lifespan
@@ -64,22 +67,31 @@ app.add_middleware(
 
 @app.middleware("http")
 async def security_and_rate_limit_middleware(request: Request, call_next):
-    # 1. Rate limiting for /search route
+    if request.method != "OPTIONS" and request.url.path == "/search":
+        origin = request.headers.get("origin")
+        if origin and origin not in _ALLOWED_ORIGINS:
+            return Response(content='{"detail":"Origin is not allowed"}', status_code=403, media_type="application/json")
+
+    # Bounded per-process rate limiting. Deploy an edge limiter too when
+    # running multiple workers, because memory is not shared between them.
     if request.url.path == "/search":
         client_ip = request.client.host if request.client else "unknown"
         now = time.time()
-        # Clean timestamps older than 60s
-        _IP_SEARCH_TIMESTAMPS[client_ip] = [
-            ts for ts in _IP_SEARCH_TIMESTAMPS[client_ip] if now - ts < 60
-        ]
-        if len(_IP_SEARCH_TIMESTAMPS[client_ip]) >= _RATE_LIMIT_SEARCH_PER_MIN:
-            logger.warning("Rate limit exceeded for IP: %s", client_ip)
-            return Response(
-                content='{"detail":"Rate limit exceeded. Maximum 30 search requests per minute."}',
-                status_code=429,
-                media_type="application/json",
-            )
-        _IP_SEARCH_TIMESTAMPS[client_ip].append(now)
+        with _RATE_LIMIT_LOCK:
+            timestamps = _IP_SEARCH_TIMESTAMPS.get(client_ip, deque())
+            while timestamps and now - timestamps[0] >= 60:
+                timestamps.popleft()
+            if len(timestamps) >= _RATE_LIMIT_SEARCH_PER_MIN:
+                logger.warning("Rate limit exceeded for IP: %s", client_ip)
+                return Response(
+                    content=f'{{"detail":"Rate limit exceeded. Maximum {_RATE_LIMIT_SEARCH_PER_MIN} search requests per minute."}}',
+                    status_code=429, media_type="application/json",
+                )
+            timestamps.append(now)
+            _IP_SEARCH_TIMESTAMPS[client_ip] = timestamps
+            _IP_SEARCH_TIMESTAMPS.move_to_end(client_ip)
+            while len(_IP_SEARCH_TIMESTAMPS) > _RATE_LIMIT_MAX_CLIENTS:
+                _IP_SEARCH_TIMESTAMPS.popitem(last=False)
 
     # 2. Process request
     response: Response = await call_next(request)
@@ -129,7 +141,7 @@ def health_check():
 @app.get("/search")
 def search_api(
     response: Response,
-    q: str = Query(""),
+    q: str = Query("", max_length=500),
     alpha: float = Query(0.5, ge=0.0, le=1.0),
     top_k: int = Query(6, ge=1, le=50),
     price_tier: str = Query("all"),
@@ -143,18 +155,21 @@ def search_api(
             inferred_features = json.loads(exact_features)
         except json.JSONDecodeError as exc:
             raise HTTPException(status_code=400, detail=f"Invalid exact_features JSON: {exc}") from exc
-        # Pure acoustic mode when there is no text query
+        # Pure acoustic mode when there is no text query.
         if not q.strip():
-            alpha = 1.0
+            alpha = 0.0
     else:
         inferred_features = infer_target_profile(q)
 
-    inferred_vector = to_vector(inferred_features)
+    try:
+        inferred_vector = to_vector(inferred_features)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     from search_repository import fetch_search_candidates, filter_by_price_tier
 
     search_iems_data, search_descriptions, search_corpus_vectors, search_corpus_embeddings = (
-        fetch_search_candidates(q)
+        fetch_search_candidates(q, semantic_weight=alpha)
     )
 
     search_iems_data, search_descriptions, search_corpus_vectors, search_corpus_embeddings = (
@@ -164,6 +179,9 @@ def search_api(
             price_tier,
         )
     )
+
+    if not search_iems_data:
+        return {"results": [], "inferred_features": inferred_features}
 
     results = hybrid_search(
         query=q,
@@ -213,7 +231,7 @@ def get_iem_api(name: str, response: Response):
 
         res = client.table("iems").select("*").eq("name", name).execute()
         if not res.data:
-            return {"error": "IEM not found"}
+            raise HTTPException(status_code=404, detail="IEM not found")
 
         iem_data = res.data[0]
 
@@ -233,9 +251,11 @@ def get_iem_api(name: str, response: Response):
 
         return {"iem": iem_data, "similar": similar_items}
 
-    except Exception as exc:
+    except HTTPException:
+        raise
+    except Exception:
         logger.exception("Error fetching IEM from Supabase: %s", name)
-        return {"error": str(exc)}
+        raise HTTPException(status_code=503, detail="IEM data is temporarily unavailable")
 
 
 def _get_iem_local(name: str) -> dict:
@@ -245,7 +265,7 @@ def _get_iem_local(name: str) -> dict:
         None,
     )
     if iem_idx is None:
-        return {"error": "IEM not found"}
+        raise HTTPException(status_code=404, detail="IEM not found")
 
     iem_name, iem_feats = data_manager.iems[iem_idx]
     iem_desc = data_manager.descriptions[iem_idx]

@@ -12,6 +12,7 @@ import hashlib
 import json
 import logging
 import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ Write 1-2 sentences describing the tonal signature, suitable for someone \
 searching for an IEM by vibe rather than by spec.\
 """
 
-_CACHE_FILE = "descriptions_cache.json"
+_CACHE_FILE = Path(__file__).resolve().with_name("descriptions_cache.json")
 _PLACEHOLDER_PREFIXES = ("your_", "YOUR_")
 _FALLBACK_MODEL = "gemini-flash-latest"
 
@@ -46,14 +47,14 @@ def _hash_features(features: dict[str, float]) -> str:
 
 
 def _load_cache() -> dict[str, str]:
-    if os.path.exists(_CACHE_FILE):
-        with open(_CACHE_FILE, "r", encoding="utf-8") as f:
+    if _CACHE_FILE.exists():
+        with _CACHE_FILE.open("r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
 
 def _save_cache(cache: dict[str, str]) -> None:
-    with open(_CACHE_FILE, "w", encoding="utf-8") as f:
+    with _CACHE_FILE.open("w", encoding="utf-8") as f:
         json.dump(cache, f, indent=2)
 
 
@@ -82,10 +83,7 @@ def describe(features: dict[str, float], iem_name: str = "Unknown") -> str:
         logger.info(
             "No valid GEMINI_API_KEY — using fallback description for %s.", iem_name
         )
-        return (
-            f"{iem_name} is a balanced, high-resolution in-ear monitor "
-            "tuned against standardised acoustic targets."
-        )
+        return "Measured frequency-response profile, shown relative to the Harman target."
 
     # Lazy import — avoid loading library startup cost when cache is hit.
     from google import genai
@@ -101,10 +99,7 @@ def describe(features: dict[str, float], iem_name: str = "Unknown") -> str:
         desc = response.text.strip()
     except Exception as exc:
         logger.warning("Gemini describe call failed for %s: %s", iem_name, exc)
-        return (
-            f"{iem_name} is a balanced, high-resolution in-ear monitor "
-            "tuned against standardised acoustic targets."
-        )
+        return "Measured frequency-response profile, shown relative to the Harman target."
 
     cache[cache_key] = desc
     _save_cache(cache)

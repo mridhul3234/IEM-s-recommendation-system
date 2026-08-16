@@ -20,7 +20,9 @@ services:
       - key: SUPABASE_KEY
         sync: false
       - key: ALLOWED_ORIGINS
-        value: "*"
+        sync: false
+      - key: RATE_LIMIT_MAX_CLIENTS
+        value: "10000"
 
   # 2. Astro Frontend Static Site
   - type: web

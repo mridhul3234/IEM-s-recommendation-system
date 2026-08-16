@@ -11,8 +11,8 @@ This guide details the deployment architecture, CI/CD pipeline, environment conf
 | Environment | Purpose | Trigger | API Base URL | DB Backend |
 |---|---|---|---|---|
 | **Development** | Local testing & dev | Local `npm run dev` / `python server.py` | `http://localhost:8000` | Local CSV fallback / Dev Supabase |
-| **Staging** | Pre-release verification | Push to `main` branch | `https://staging-api.acousticsearch.app` | Staging Supabase |
-| **Production** | Live audiophile traffic | Release tag `v*.*.*` | `https://api.acousticsearch.app` | Production Supabase pgvector |
+| **Staging** | Pre-release verification | Manual host deployment | Your staging API URL | Staging Supabase |
+| **Production** | Live audiophile traffic | Host deployment from an approved commit | Your production API URL | Production Supabase pgvector |
 
 ---
 
@@ -21,10 +21,8 @@ This guide details the deployment architecture, CI/CD pipeline, environment conf
 1. **Pull Request / Commit Stage**:
    - Runs **Python 3.13 Backend Test Suite**: `pytest` (102 tests pass).
    - Runs **Node 22 Frontend Build Verification**: `npm ci && npm run build`.
-2. **Staging Stage**:
-   - Merging PR into `main` automatically triggers staging deployment.
-3. **Production Stage**:
-   - Pushing a semver release tag (e.g., `git tag v1.0.0 && git push origin v1.0.0`) triggers production deployment with health-check gating.
+2. This workflow deliberately does **not** deploy. The earlier deployment jobs only printed messages and could not release or health-check anything.
+3. Deploy through the configured host (for example Render's connected branch/manual deploy), then run the health check below before calling a release complete.
 
 ---
 
@@ -36,6 +34,7 @@ Configure the following secrets in **GitHub Repo Settings -> Secrets and variabl
 - `SUPABASE_URL`: Production Supabase project URL (`https://<project-id>.supabase.co`).
 - `SUPABASE_KEY`: Production Supabase anonymous/service key.
 - `ALLOWED_ORIGINS`: Production CORS origins (`https://acousticsearch.app`).
+- `ALLOWED_ORIGINS` is enforced for browser requests. For non-browser client authentication or multi-instance rate limits, put the backend behind an authenticated edge proxy; a secret embedded in this static frontend would not be a security boundary.
 
 ---
 
@@ -66,7 +65,7 @@ Expected Response:
   "status": "ok",
   "service": "AcousticSearch API",
   "supabase_configured": true,
-  "local_items_loaded": 30,
+  "local_items_loaded": 10,
   "timestamp": "2026-08-11T21:54:00Z"
 }
 ```
@@ -91,7 +90,7 @@ git revert HEAD -m 1 --no-edit
 git tag v1.0.1 -m "Rollback to stable"
 git push origin main --tags
 ```
-The CI/CD pipeline will verify tests and deploy `v1.0.1` automatically.
+The CI workflow will verify tests. Trigger the rollback using your hosting provider and verify `/health` before reopening traffic.
 
 ---
 
@@ -112,5 +111,5 @@ The CI/CD pipeline will verify tests and deploy `v1.0.1` automatically.
    ```
 5. Re-run migration validation if needed:
    ```bash
-   python migrate_to_supabase.py --confirm-production
+   python migrate_to_supabase.py --confirm-production --price-catalog reviewed_prices.json
    ```

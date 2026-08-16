@@ -25,7 +25,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-asyncio httpx
+          pip install -r requirements-dev.txt
 
       - name: Run Pytest Test Suite
         env:
@@ -58,25 +58,3 @@ jobs:
 
       - name: Build Astro Static Site
         run: npm run build
-
-  deploy-staging:
-    name: Deploy to Staging Environment
-    needs: [backend-test, frontend-build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Staging Deployment Notification
-        run: |
-          echo "🚀 Staging deployment triggered on merge to main."
-          echo "Run staging health check: GET /health"
-
-  deploy-production:
-    name: Deploy to Production Environment
-    needs: [backend-test, frontend-build]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Production Deployment Notification
-        run: |
-          echo "🎉 Production release deployment triggered on tag ${GITHUB_REF#refs/tags/}."
-          echo "Verifying health check: GET /health"

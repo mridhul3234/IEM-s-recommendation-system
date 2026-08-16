@@ -190,9 +190,9 @@ class TestIemEndpoint:
 
     def test_unknown_iem_returns_error(self, client):
         res = client.get("/iem/NonExistentIEM9999")
-        assert res.status_code == 200
+        assert res.status_code == 404
         data = res.json()
-        assert "error" in data
+        assert data["detail"] == "IEM not found"
 
     def test_url_encoded_name(self, client):
         res = client.get("/iem/Moondrop%20Aria")

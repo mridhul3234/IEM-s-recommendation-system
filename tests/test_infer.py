@@ -43,10 +43,10 @@ class TestParseAcousticJson:
         with pytest.raises(json.JSONDecodeError):
             parse_acoustic_json("")
 
-    def test_nested_json_doesnt_crash(self):
+    def test_incomplete_json_is_rejected(self):
         payload = json.dumps({"sub_bass": 2.0, "extra": {"nested": True}})
-        result = parse_acoustic_json(payload)
-        assert result["sub_bass"] == 2.0
+        with pytest.raises(Exception):
+            parse_acoustic_json(payload)
 
 
 # ---------------------------------------------------------------------------
@@ -59,15 +59,12 @@ class TestInferTargetProfile:
 
     def test_falls_back_to_default_when_no_key(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "")
-        # Patch Ollama to also fail
-        monkeypatch.setattr("infer.call_ollama_fallback", lambda p: (_ for _ in ()).throw(Exception("no ollama")))
         from infer import infer_target_profile
         result = infer_target_profile("warm bass IEM")
         assert result == DEFAULT_PROFILE
 
     def test_returns_dict_with_placeholder_key(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "your_gemini_api_key_here")
-        monkeypatch.setattr("infer.call_ollama_fallback", lambda p: (_ for _ in ()).throw(Exception("no ollama")))
         from infer import infer_target_profile
         result = infer_target_profile("test")
         assert isinstance(result, dict)
@@ -81,25 +78,22 @@ class TestInferTargetProfile:
         for k in EXPECTED_KEYS:
             assert k in result
 
-    def test_gemini_failure_falls_to_ollama(self, monkeypatch):
+    def test_gemini_failure_returns_default_without_ollama_delay(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "AIzaSyFakeButFormatCorrect12345678")
         monkeypatch.setattr("infer.call_gemini_api", lambda p, k: (_ for _ in ()).throw(Exception("API fail")))
-        monkeypatch.setattr("infer.call_ollama_fallback", lambda p: self._good_response())
         from infer import infer_target_profile
         result = infer_target_profile("test query")
-        assert result["bass"] == 1.0
+        assert result == DEFAULT_PROFILE
 
     def test_both_fail_returns_default(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "AIzaSyFakeButFormatCorrect12345678")
         monkeypatch.setattr("infer.call_gemini_api", lambda p, k: (_ for _ in ()).throw(Exception("fail")))
-        monkeypatch.setattr("infer.call_ollama_fallback", lambda p: (_ for _ in ()).throw(Exception("fail")))
         from infer import infer_target_profile
         result = infer_target_profile("test")
         assert result == DEFAULT_PROFILE
 
     def test_empty_query_handled(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "")
-        monkeypatch.setattr("infer.call_ollama_fallback", lambda p: (_ for _ in ()).throw(Exception("fail")))
         from infer import infer_target_profile
         result = infer_target_profile("")
         assert isinstance(result, dict)

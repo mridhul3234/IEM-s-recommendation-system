@@ -26,6 +26,7 @@ class TestConfigValidation:
             backend_port=8000,
             allowed_origins=["*"],
             rate_limit_search=30,
+            rate_limit_max_clients=100,
         )
         # In development mode, missing keys log warnings but do NOT raise an error
         validate_config(dev_settings)
@@ -40,6 +41,7 @@ class TestConfigValidation:
             backend_port=8000,
             allowed_origins=["https://acousticsearch.app"],
             rate_limit_search=30,
+            rate_limit_max_clients=100,
         )
         with pytest.raises(RuntimeError, match="FATAL: Production mode"):
             validate_config(prod_settings)
@@ -54,6 +56,17 @@ class TestConfigValidation:
             backend_port=8000,
             allowed_origins=["https://acousticsearch.app"],
             rate_limit_search=30,
+            rate_limit_max_clients=100,
         )
         # Should complete without error
         validate_config(prod_settings)
+
+    def test_production_rejects_wildcard_origin(self):
+        prod_settings = Settings(
+            app_env="production", gemini_api_key="real_key", supabase_url="https://real.supabase.co",
+            supabase_key="real_supabase_key", backend_host="0.0.0.0", backend_port=8000,
+            allowed_origins=["*"], rate_limit_search=30,
+            rate_limit_max_clients=100,
+        )
+        with pytest.raises(RuntimeError, match="non-wildcard"):
+            validate_config(prod_settings)

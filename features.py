@@ -111,7 +111,27 @@ def extract_features(freq: np.ndarray, deviation_db: np.ndarray) -> dict[str, fl
 FEATURE_ORDER = list(BANDS.keys()) + ["sibilance_risk", "tonal_tilt", "bass_to_treble"]
 
 
+def validate_feature_profile(features: dict[str, float]) -> dict[str, float]:
+    """Validate the complete numeric acoustic profile before vectorization."""
+    if not isinstance(features, dict):
+        raise ValueError("Acoustic profile must be an object.")
+
+    validated: dict[str, float] = {}
+    for key in FEATURE_ORDER:
+        if key not in features:
+            raise ValueError(f"Acoustic profile is missing required feature '{key}'.")
+        try:
+            value = float(features[key])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Acoustic profile feature '{key}' must be numeric.") from exc
+        if not np.isfinite(value):
+            raise ValueError(f"Acoustic profile feature '{key}' must be finite.")
+        validated[key] = value
+    return validated
+
+
 def to_vector(features: dict[str, float]) -> np.ndarray:
     """Fixed-order numpy vector, for the hybrid acoustic-distance re-rank
     step (cosine or euclidean distance between two IEMs' fingerprints)."""
-    return np.array([features[k] for k in FEATURE_ORDER], dtype=float)
+    profile = validate_feature_profile(features)
+    return np.array([profile[k] for k in FEATURE_ORDER], dtype=float)

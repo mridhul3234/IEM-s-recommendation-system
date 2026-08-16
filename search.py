@@ -55,10 +55,12 @@ def hybrid_search(query: str, inferred_profile: np.ndarray, corpus_texts: list[s
     alpha: Weight for semantic similarity. (1 - alpha) is for acoustic similarity.
     Returns: list of tuples (index, final_score, semantic_score, acoustic_score, text)
     """
-    query_emb = embed_texts([query])[0]
-    
-    sem_sims = cosine_similarity(query_emb, corpus_embeddings)
     ac_sims = acoustic_similarity(inferred_profile, corpus_vectors)
+    if alpha == 0.0:
+        sem_sims = np.zeros(len(corpus_texts))
+    else:
+        query_emb = embed_texts([query])[0]
+        sem_sims = cosine_similarity(query_emb, corpus_embeddings)
     
     # Normalize semantic similarities which can be in [-1, 1] loosely to [0, 1]
     # Though MiniLM embeddings usually yield cosine sim in [0, 1] for most text.

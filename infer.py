@@ -1,26 +1,25 @@
-"""
-infer.py
+"""Turn a user query into a validated acoustic target profile."""
 
-Parses a natural language user query into an inferred acoustic target profile
-(the 7 bands + 3 derived features) using a Gemini LLM, with a local Ollama
-fallback and a neutral-profile final fallback.
-"""
+from __future__ import annotations
 
+from collections import OrderedDict
 import json
 import logging
 import os
-import pydantic
-from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+import threading
+import time
 
-load_dotenv()
+import pydantic
 
 logger = logging.getLogger(__name__)
 
-_PLACEHOLDER_PREFIXES = ("your_", "YOUR_")
+_PLACEHOLDER_PREFIXES = ("your_", "YOUR_", "placeholder_")
 _PLACEHOLDER_EXACT = {"your_gemini_api_key_here"}
 _MODELS_TO_TRY = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-flash-latest"]
+PROFILE_CACHE_TTL_SECONDS = 3600
+PROFILE_CACHE_MAX_ENTRIES = 512
+_profile_cache: OrderedDict[str, tuple[float, dict[str, float]]] = OrderedDict()
+_profile_cache_lock = threading.RLock()
 
 DEFAULT_PROFILE: dict[str, float] = {
     "sub_bass": 0.0, "bass": 0.0, "low_mids": 0.0, "mids": 0.0,
@@ -42,62 +41,24 @@ class TargetProfile(pydantic.BaseModel):
     bass_to_treble: float
 
 
-PROMPT = """\
-You are an audio engineering assistant.
-A user is searching for an IEM (in-ear monitor) based on the following free-text query:
-"{query}"
-
-Your task is to infer the target acoustic fingerprint that best matches their request.
-The fingerprint represents the deviation from a neutral Harman target curve in decibels (dB), \
-where 0.0 is completely neutral.
-
-Features to infer:
-- sub_bass (20-60 Hz)
-- bass (60-250 Hz)
-- low_mids (250-500 Hz)
-- mids (500-2000 Hz)
-- presence (2-6 kHz)
-- treble (6-10 kHz)
-- air (10-20 kHz)
-- sibilance_risk (0 to 10+): higher if they want sharp treble or explicitly want something bright, \
-lower/zero if they want warm/smooth.
-- tonal_tilt: negative for warm (bass-heavy), positive for bright (treble-heavy).
-- bass_to_treble: positive if bassier than treble, negative if brighter.
-
-If the user mentions specific traits (e.g. "heavy bass"), set those values accordingly \
-(e.g. bass = 4.0).
-If the user's query is vague (e.g. "something fun"), you might infer a mild V-shape \
-(e.g. bass=2.0, treble=1.5).
-If a trait is unmentioned, default to 0.0.
-
-Respond strictly as a JSON object with numerical float values. \
-Do not include markdown formatting or backticks.
-"""
+PROMPT = """You are an audio engineering assistant. Convert this IEM search query into the requested acoustic target profile, relative to a neutral Harman target: {query!r}. Return only the schema values. Use 0.0 for unmentioned traits; do not invent product facts."""
 
 
 def _is_real_key(api_key: str) -> bool:
-    if not api_key:
-        return False
-    if api_key in _PLACEHOLDER_EXACT:
-        return False
-    if any(api_key.startswith(p) for p in _PLACEHOLDER_PREFIXES):
-        return False
-    return True
+    return bool(api_key) and api_key not in _PLACEHOLDER_EXACT and not api_key.startswith(_PLACEHOLDER_PREFIXES)
 
 
 def call_gemini_api(prompt: str, api_key: str) -> str:
-    """Try each model in sequence; raise if all fail."""
+    from google import genai
+    from google.genai import types
     client = genai.Client(api_key=api_key)
-
     last_exc: Exception | None = None
     for model in _MODELS_TO_TRY:
         try:
             response = client.models.generate_content(
-                model=model,
-                contents=prompt,
+                model=model, contents=prompt,
                 config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=TargetProfile,
+                    response_mime_type="application/json", response_schema=TargetProfile,
                     temperature=0.0,
                 ),
             )
@@ -105,53 +66,56 @@ def call_gemini_api(prompt: str, api_key: str) -> str:
         except Exception as exc:
             logger.warning("Gemini model %s failed: %s", model, exc)
             last_exc = exc
-
-    raise Exception("All Gemini models failed") from last_exc
-
-
-def call_ollama_fallback(prompt: str) -> str:
-    """Call a local Ollama server running Llama 3."""
-    import requests
-    payload = {
-        "model": "llama3",
-        "prompt": prompt,
-        "format": "json",
-        "stream": False,
-    }
-    res = requests.post("http://localhost:11434/api/generate", json=payload, timeout=15)
-    if res.status_code == 200:
-        return res.json().get("response", "{}")
-    raise Exception(f"Ollama returned status {res.status_code}")
+    raise RuntimeError("All Gemini models failed") from last_exc
 
 
 def parse_acoustic_json(json_str: str) -> dict[str, float]:
-    """Parse JSON string into a feature dict."""
-    return json.loads(json_str)
+    """Parse and validate LLM output before any ranking code consumes it."""
+    payload = json.loads(json_str)
+    return TargetProfile.model_validate(payload).model_dump()
+
+
+def _cache_key(query: str) -> str:
+    return " ".join(query.casefold().split())
+
+
+def _cache_get(key: str) -> dict[str, float] | None:
+    now = time.monotonic()
+    with _profile_cache_lock:
+        cached = _profile_cache.get(key)
+        if cached is None:
+            return None
+        expires_at, profile = cached
+        if expires_at <= now:
+            del _profile_cache[key]
+            return None
+        _profile_cache.move_to_end(key)
+        return dict(profile)
+
+
+def _cache_set(key: str, profile: dict[str, float]) -> None:
+    with _profile_cache_lock:
+        _profile_cache[key] = (time.monotonic() + PROFILE_CACHE_TTL_SECONDS, dict(profile))
+        _profile_cache.move_to_end(key)
+        while len(_profile_cache) > PROFILE_CACHE_MAX_ENTRIES:
+            _profile_cache.popitem(last=False)
 
 
 def infer_target_profile(query: str) -> dict[str, float]:
-    """
-    Infer the acoustic profile from a user query.
-    Falls back through: Gemini → Ollama → neutral default profile.
-    """
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    prompt = PROMPT.format(query=query)
+    """Use Gemini once per normalized query/hour; safely fall back to neutral."""
+    key = _cache_key(query)
+    if cached := _cache_get(key):
+        return cached
 
-    if _is_real_key(api_key):
-        try:
-            return parse_acoustic_json(call_gemini_api(prompt, api_key))
-        except Exception as exc:
-            logger.warning("Gemini failed (%s). Trying Ollama...", exc)
-    else:
-        logger.info(
-            "GEMINI_API_KEY not set or is a placeholder. "
-            "Set a real key in .env to enable LLM inference."
-        )
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not _is_real_key(api_key):
+        logger.warning("Gemini inference is unavailable; using a neutral target profile.")
+        return dict(DEFAULT_PROFILE)
 
     try:
-        return parse_acoustic_json(call_ollama_fallback(prompt))
+        profile = parse_acoustic_json(call_gemini_api(PROMPT.format(query=query), api_key))
     except Exception as exc:
-        logger.warning("Ollama fallback failed: %s", exc)
-
-    logger.warning("All inference methods failed. Defaulting to neutral acoustic profile.")
-    return dict(DEFAULT_PROFILE)
+        logger.warning("Gemini inference failed; using a neutral target profile: %s", exc)
+        return dict(DEFAULT_PROFILE)
+    _cache_set(key, profile)
+    return profile

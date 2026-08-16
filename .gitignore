@@ -29,5 +29,9 @@ frontend/.astro/
 .vscode/
 .idea/
 *.log
+embeddings_cache.json
+embeddings_cache.lock
+descriptions_cache.json
+retailer_catalog_review.json
 .DS_Store
 Thumbs.db

@@ -31,7 +31,9 @@ Audio enthusiasts and consumers often struggle to find In-Ear Monitors (IEMs) th
 
 - **LLM Query Parsing**: Uses Google Gemini to infer 7 frequency band deviations (Sub-Bass to Air) + 3 derived acoustic signals (Sibilance Risk, Tonal Tilt, Bass-to-Treble Ratio).
 - **Hybrid Recommendation Pipeline**: Combines dense semantic similarity with objective acoustic distance ($\alpha = 0.5$) to eliminate LLM hallucinations.
-- **Supabase + pgvector Integration**: Fast vector retrieval backed by PostgreSQL with graceful local offline fallback.
+- **Supabase + pgvector Integration**: Fast vector retrieval backed by PostgreSQL, with a measured local sample available for offline development.
+- **Verified data pipeline**: Retail listings are exported for human review only; acoustic profiles require an imported measurement and prices require an approved source record.
+- **Lean deployment**: Remote Gemini embeddings replace the PyTorch runtime; after deployment, re-index the Supabase corpus with `migrate_to_supabase.py` so its vectors use `gemini-embedding-001:384`.
 - **Rate Limiting & Security Headers**: Enforces sliding-window IP rate limiting (30 search requests/min) + HTTP security response headers (`X-Frame-Options`, `X-Content-Type-Options`).
 - **Health & Uptime Monitoring**: Exposes `/health` and `/api/health` endpoints returning system diagnostics and dataset counts.
 - **Fail-Fast Configuration**: Centralized `config.py` with environment file cascading (`.env.production`, `.env.staging`, `.env`).

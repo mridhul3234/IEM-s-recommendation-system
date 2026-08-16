@@ -104,7 +104,11 @@ class TestIsSupabaseConfigured:
         import db
         monkeypatch.setenv("SUPABASE_URL", url)
         monkeypatch.setenv("SUPABASE_KEY", key)
-        # Force reload to pick up monkeypatched env
+        # db intentionally reads centralized config.settings.
+        import config
+        import importlib
+        importlib.reload(config)
+        importlib.reload(db)
         return db.is_supabase_configured()
 
     def test_real_values_return_true(self, monkeypatch):

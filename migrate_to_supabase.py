@@ -6,8 +6,10 @@ and pushes them to Supabase via db.py.
 """
 
 import glob
+import json
 import os
 import sys
+from pathlib import Path
 
 from describe import describe
 from features import extract_features
@@ -21,10 +23,47 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TARGET_PATH = os.path.join(HERE, "sample_data", "targets", "Harman in-ear 2019.csv")
 IEM_DIR = os.path.join(HERE, "sample_data", "in-ear")
 
+def load_verified_prices(path: str | None) -> dict[str, dict]:
+    """Load only explicitly reviewed price entries with an exact product name."""
+    if not path:
+        return {}
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, list):
+        raise ValueError("Price catalog must be a JSON array.")
+    prices: dict[str, dict] = {}
+    for entry in payload:
+        if not isinstance(entry, dict) or entry.get("review_status") != "approved":
+            continue
+        name = entry.get("name")
+        try:
+            price = float(entry["price"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not isinstance(name, str) or not name.strip() or price < 0:
+            continue
+        if not entry.get("source_url") or not entry.get("verified_at"):
+            continue
+        prices[name] = {"price": price, "price_currency": entry.get("currency", "USD"),
+                        "price_source_url": entry["source_url"], "price_verified_at": entry["verified_at"]}
+    return prices
+
 def main():
     if settings.is_production and "--confirm-production" not in sys.argv:
         print("⚠️ WARNING: You are attempting to run migrations against a PRODUCTION environment!")
         print("To proceed, re-run with the flag: python migrate_to_supabase.py --confirm-production")
+        sys.exit(1)
+
+    price_catalog_path = None
+    if "--price-catalog" in sys.argv:
+        try:
+            price_catalog_path = sys.argv[sys.argv.index("--price-catalog") + 1]
+        except IndexError:
+            print("Error: --price-catalog requires a JSON file path.")
+            sys.exit(1)
+    try:
+        verified_prices = load_verified_prices(price_catalog_path)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"Error loading verified price catalog: {exc}")
         sys.exit(1)
 
     try:
@@ -53,6 +92,10 @@ def main():
         freq, deviation = deviation_from_target(iem, target, grid_hz=grid)
         feats = extract_features(freq, deviation)
         iem_name_clean = os.path.basename(path).replace(".csv", "")
+        feats["acoustic_profile_source"] = "local_measurement"
+        feats["embedding_model"] = "gemini-embedding-001:384"
+        if price := verified_prices.get(iem_name_clean):
+            feats.update(price)
         desc = describe(feats, iem_name=iem_name_clean)
         
         metadata.append({

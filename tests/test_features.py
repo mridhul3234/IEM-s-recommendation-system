@@ -202,6 +202,6 @@ class TestToVector:
             assert vec[i] == pytest.approx(float(i))
 
     def test_missing_key_raises(self):
-        """If a feature key is missing, to_vector should raise KeyError."""
-        with pytest.raises(KeyError):
+        """If a feature key is missing, to_vector should reject the profile."""
+        with pytest.raises(ValueError):
             to_vector({"sub_bass": 1.0})  # incomplete dict
