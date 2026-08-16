@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 PRICE_TIER_THRESHOLD = 500
 
 
+class SearchRepositoryUnavailable(RuntimeError):
+    """The configured production repository could not serve a search."""
+
+
 def _records_to_candidates(records: list[dict]) -> tuple[list, list, np.ndarray, np.ndarray]:
     """Convert complete, valid database records into ranking inputs."""
     iems_data: list[tuple[str, dict]] = []
@@ -50,13 +54,10 @@ def fetch_search_candidates(q: str, semantic_weight: float = 0.5):
     Returns:
         tuple: (iems_data, descriptions, corpus_vectors, corpus_embeddings)
     """
-    search_iems_data = data_manager.iems
-    search_descriptions = data_manager.descriptions
-    search_corpus_vectors = data_manager.corpus_vectors
-    search_corpus_embeddings = data_manager.corpus_embeddings
-
     from db import is_supabase_configured
-    if is_supabase_configured() and (q.strip() or semantic_weight == 0.0):
+    if is_supabase_configured():
+        if not (q.strip() or semantic_weight == 0.0):
+            return [], [], np.empty((0, 10)), np.empty((0, 384))
         try:
             from db import get_client, list_iems, search_iems
             client = get_client()
@@ -69,14 +70,23 @@ def fetch_search_candidates(q: str, semantic_weight: float = 0.5):
             if db_results:
                 candidates = _records_to_candidates(db_results)
                 if candidates[0]:
-                    (search_iems_data, search_descriptions,
-                     search_corpus_vectors, search_corpus_embeddings) = candidates
-            else:
-                logger.warning("Supabase returned 0 results; falling back to local dataset.")
+                    return candidates
+                raise SearchRepositoryUnavailable("Supabase returned no valid measured records.")
+            return [], [], np.empty((0, 10)), np.empty((0, 384))
         except Exception as exc:
-            logger.warning("Supabase query failed, using local fallback: %s", exc)
+            if isinstance(exc, SearchRepositoryUnavailable):
+                raise
+            logger.exception("Supabase query failed.")
+            raise SearchRepositoryUnavailable("Supabase search is unavailable.") from exc
 
-    return search_iems_data, search_descriptions, search_corpus_vectors, search_corpus_embeddings
+    if not data_manager.iems or data_manager.corpus_vectors is None or data_manager.corpus_embeddings is None:
+        raise SearchRepositoryUnavailable("Local measured corpus is unavailable.")
+    return (
+        data_manager.iems,
+        data_manager.descriptions,
+        data_manager.corpus_vectors,
+        data_manager.corpus_embeddings,
+    )
 
 
 def filter_by_price_tier(

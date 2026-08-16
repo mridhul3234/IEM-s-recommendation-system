@@ -53,7 +53,14 @@ from data_manager import data_manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     validate_config(settings)
-    data_manager.load_local_data()
+    from db import is_supabase_configured
+    if is_supabase_configured():
+        # Production must serve its measured database, not a partial local
+        # corpus whose descriptions would trigger extra embedding work.
+        data_manager.clear()
+        logger.info("Supabase configured; local fallback corpus is disabled.")
+    else:
+        data_manager.load_local_data()
     yield
 
 app = FastAPI(title="IEM Recommendation Engine API", lifespan=lifespan)
@@ -166,11 +173,18 @@ def search_api(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    from search_repository import fetch_search_candidates, filter_by_price_tier
-
-    search_iems_data, search_descriptions, search_corpus_vectors, search_corpus_embeddings = (
-        fetch_search_candidates(q, semantic_weight=alpha)
+    from search_repository import (
+        SearchRepositoryUnavailable,
+        fetch_search_candidates,
+        filter_by_price_tier,
     )
+
+    try:
+        search_iems_data, search_descriptions, search_corpus_vectors, search_corpus_embeddings = (
+            fetch_search_candidates(q, semantic_weight=alpha)
+        )
+    except SearchRepositoryUnavailable as exc:
+        raise HTTPException(status_code=503, detail="Search data is temporarily unavailable") from exc
 
     search_iems_data, search_descriptions, search_corpus_vectors, search_corpus_embeddings = (
         filter_by_price_tier(
@@ -260,6 +274,8 @@ def get_iem_api(name: str, response: Response):
 
 def _get_iem_local(name: str) -> dict:
     """Local-dataset fallback for /iem/{name}."""
+    if data_manager.corpus_embeddings is None:
+        raise HTTPException(status_code=503, detail="Local measurement data is temporarily unavailable")
     iem_idx = next(
         (i for i, (n, _f) in enumerate(data_manager.iems) if n == name),
         None,

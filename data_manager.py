@@ -29,8 +29,18 @@ class DataManager:
         self.corpus_vectors: np.ndarray | None = None
         self.corpus_embeddings: np.ndarray | None = None
 
+    def clear(self) -> None:
+        """Release the offline corpus when the production repository is active."""
+        self.target = None
+        self.grid = None
+        self.iems = []
+        self.descriptions = []
+        self.corpus_vectors = None
+        self.corpus_embeddings = None
+
     def load_local_data(self) -> None:
         logger.info("Loading local fallback data...")
+        self.clear()
         self.target = load_fr_csv(TARGET_PATH, name="Harman in-ear 2019")
         self.grid = standard_grid()
 

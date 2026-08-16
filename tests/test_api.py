@@ -138,6 +138,11 @@ class TestSearchEndpoint:
         assert res.headers.get("X-Content-Type-Options") == "nosniff"
         assert res.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
 
+    def test_unapproved_browser_origin_is_rejected(self, client):
+        res = client.get("/search?q=test", headers={"Origin": "https://attacker.example"})
+        assert res.status_code == 403
+        assert res.json()["detail"] == "Origin is not allowed"
+
     def test_rate_limiting(self, client, monkeypatch):
         import server
         monkeypatch.setattr(server, "_RATE_LIMIT_SEARCH_PER_MIN", 2)
