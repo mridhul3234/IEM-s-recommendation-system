@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Headphones, Equalizer, Lightning, ShieldCheck, Sparkle, ArrowsLeftRight } from '@phosphor-icons/react';
+import { Headphones, Equalizer, Lightning, ShieldCheck, Sparkle, ArrowsLeftRight } from '@phosphor-icons/react';
 import ScrollFrameBackground from './ScrollFrameBackground';
 
 export default function AboutApp() {
@@ -38,10 +38,6 @@ export default function AboutApp() {
 
         {/* Right CTA Button */}
         <div className="flex items-center gap-4">
-          <button className="hidden lg:flex items-center gap-2 text-xs font-mono uppercase text-textMuted hover:text-textPrimary transition-colors">
-            <Globe weight="bold" size={16} /> EN
-          </button>
-          
           <motion.a 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MagnifyingGlass, Globe, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, WarningCircle, SlidersHorizontal } from '@phosphor-icons/react';
+import { MagnifyingGlass, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, WarningCircle, SlidersHorizontal } from '@phosphor-icons/react';
 import ResultCard from './ResultCard';
 import EqSliderGrid from './EqSliderGrid';
 import ErrorBoundary from './ErrorBoundary';
@@ -303,10 +303,6 @@ export default function SearchApp() {
 
         {/* Right CTA Button */}
         <div className="flex items-center gap-4">
-          <button className="hidden lg:flex items-center gap-2 text-xs font-mono uppercase text-textMuted hover:text-textPrimary transition-colors">
-            <Globe weight="bold" size={16} /> EN
-          </button>
-          
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
