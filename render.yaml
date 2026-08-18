@@ -5,7 +5,7 @@ services:
   # 1. Python FastAPI Backend Service
   - type: web
     name: acousticsearch-backend
-    env: python
+    runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python -m uvicorn backend.server:app --host 0.0.0.0 --port $PORT
@@ -13,6 +13,8 @@ services:
     envVars:
       - key: APP_ENV
         value: production
+      - key: PYTHON_VERSION
+        value: "3.13.5"
       - key: GEMINI_API_KEY
         sync: false
       - key: SUPABASE_URL
@@ -23,18 +25,3 @@ services:
         sync: false
       - key: RATE_LIMIT_MAX_CLIENTS
         value: "10000"
-
-  # 2. Astro Frontend Static Site
-  - type: web
-    name: acousticsearch-frontend
-    env: static
-    plan: free
-    rootDir: frontend
-    buildCommand: npm ci && npm run build
-    staticPublishPath: ./dist
-    envVars:
-      - key: PUBLIC_API_BASE_URL
-        fromService:
-          type: web
-          name: acousticsearch-backend
-          property: url

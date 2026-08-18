@@ -40,18 +40,26 @@ Configure the following secrets in **GitHub Repo Settings -> Secrets and variabl
 
 ## 4. Hosting & Zero-Downtime Deployment Setup
 
-### Backend (FastAPI Python) — e.g., Render / Railway / Docker
+### Backend (FastAPI Python) — Render
+
+The repository-root `render.yaml` now defines only the backend. In Render, create or sync that Blueprint from `main`; do not set `rootDir` to `backend`, because the start command imports the top-level `backend` package.
+
+- **Runtime**: Python 3.13.5.
 - **Build Command**: `pip install -r requirements.txt`
 - **Start Command**: `python -m uvicorn backend.server:app --host 0.0.0.0 --port $PORT`
-- **Health Check Path**: `/health` (Zero-downtime rolling cutover waits for HTTP 200 `{"status": "ok"}`).
+- **Health Check Path**: `/health` (the platform must receive HTTP 200 before cutover).
+- **Required Render environment variables**: `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`, and `ALLOWED_ORIGINS`. The production server intentionally refuses to start without these values. Set `ALLOWED_ORIGINS` to the exact Vercel production origin, for example `https://your-project.vercel.app` (comma-separate any additional approved custom domains). Never use `*`.
+- **Verify before configuring Vercel**: open `https://<your-render-service>.onrender.com/health` and confirm HTTP 200, then open `/ready` and confirm it returns HTTP 200. A healthy process with `/ready` returning 503 does not have a usable data source.
 - **Readiness Check Path**: `/ready` verifies the active corpus or makes a small authenticated Supabase query. Use it for alerting; `/health` stays lightweight for platform liveness probes.
 - **Worker scaling prerequisite**: the rate limiter and profile cache are process-local. Before adding Uvicorn workers or horizontal replicas, move rate limiting and shared cache coordination to Redis (or an equivalent shared service), then load-test Gemini and Supabase concurrency limits. The checked-in Render service stays single-worker until that is in place.
 
-### Frontend (Astro Static Site) — e.g., Cloudflare Pages / Vercel / Netlify
-- **Framework Preset**: Astro
-- **Build Command**: `npm run build` (inside `frontend/`)
-- **Output Directory**: `frontend/dist`
-- **Environment Variables**: Set `PUBLIC_API_BASE_URL=https://api.acousticsearch.app`.
+### Frontend (Astro Static Site) — Vercel
+
+Import the repository root in Vercel. The checked-in `vercel.json` installs and builds from `frontend/` and publishes `frontend/dist`, so no Vercel dashboard build or output-directory override is needed.
+
+- **Environment Variable**: set `PUBLIC_API_BASE_URL=https://<your-render-service>.onrender.com` for Production, Preview, and Development as appropriate. It is a public browser value, so it must contain only the Render API origin and no secret.
+- **Redeploy after setting the variable**: Astro writes `PUBLIC_` variables into the static build. Changing it without a new Vercel deployment leaves the old bundle in place.
+- **Verify**: in the deployed browser, perform a search. If it fails, first test the browser request's `Origin` against Render's `ALLOWED_ORIGINS`; direct navigation to the API alone does not prove CORS is correct.
 
 ---
 

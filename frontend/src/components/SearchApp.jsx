@@ -4,6 +4,7 @@ import { MagnifyingGlass, Cpu, Target, Waves, CaretDown, ArrowsLeftRight, Warnin
 import ResultCard from './ResultCard';
 import EqSliderGrid from './EqSliderGrid';
 import ErrorBoundary from './ErrorBoundary';
+import { getApiBaseUrl } from '../lib/api';
 
 const ScrollFrameBackground = lazy(() => import('./ScrollFrameBackground'));
 
@@ -178,7 +179,7 @@ export default function SearchApp() {
 
     try {
       const ts = Date.now();
-      const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'https://iem-s-recommendation-system-nudd.vercel.app';
+      const apiBase = getApiBaseUrl();
       let url = `${apiBase}/search?top_k=${targetTopK}&price_tier=${selectedPriceTier}&_t=${ts}`;
       if (isEqMode) {
         url += `&q=${encodeURIComponent(q || "")}&exact_features=${encodeURIComponent(JSON.stringify(exactFeatures))}`;
@@ -215,7 +216,7 @@ export default function SearchApp() {
       if (err.name === 'AbortError') return;
       const isNetworkErr = err.message?.toLowerCase().includes('failed to fetch');
       const displayErr = isNetworkErr
-        ? `Unable to connect to search API at ${import.meta.env.PUBLIC_API_BASE_URL || 'https://iem-s-recommendation-system-nudd.vercel.app'}. Please verify backend server status.`
+        ? 'Unable to connect to the search API. Please verify the Render backend status.'
         : err.message;
       setError(displayErr);
     } finally {

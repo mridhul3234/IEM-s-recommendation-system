@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MiniChart from './MiniChart';
 import ErrorBoundary from './ErrorBoundary';
+import { getApiBaseUrl } from '../lib/api';
 
 const COLORS = ["#ef4444", "#3b82f6", "#10b981"]; // Red, Blue, Green
 
@@ -24,7 +25,7 @@ export default function CompareApp() {
 
     const fetchIems = async () => {
       try {
-        const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'https://iem-s-recommendation-system-nudd.vercel.app';
+        const apiBase = getApiBaseUrl();
         const fetched = [];
         for (const name of names) {
           const res = await fetch(`${apiBase}/iem/${encodeURIComponent(name)}`);

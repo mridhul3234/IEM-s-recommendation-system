@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MiniChart from './MiniChart';
 import ResultCard from './ResultCard';
 import ErrorBoundary from './ErrorBoundary';
+import { getApiBaseUrl } from '../lib/api';
 
 export default function ProductApp() {
   const [iem, setIem] = useState(null);
@@ -21,7 +22,7 @@ export default function ProductApp() {
 
     const fetchIem = async () => {
       try {
-        const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'https://iem-s-recommendation-system-nudd.vercel.app';
+        const apiBase = getApiBaseUrl();
         const res = await fetch(`${apiBase}/iem/${encodeURIComponent(name)}`);
         if (!res.ok) throw new Error('Failed to fetch IEM details');
         const data = await res.json();
