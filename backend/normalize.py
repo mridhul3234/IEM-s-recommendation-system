@@ -22,9 +22,13 @@ Crinacle's raw 711/5128 rig files) that doesn't share oratory1990's exact
 from __future__ import annotations
 
 import csv
+import logging
+import math
 from dataclasses import dataclass
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -38,16 +42,23 @@ def load_fr_csv(path: str, name: str | None = None) -> FRCurve:
     """Load a two-column (frequency, raw) CSV like the ones in AutoEq's
     measurements/ and targets/ folders."""
     freqs, dbs = [], []
+    skipped_rows = 0
     with open(path, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         for row in reader:
             if not row or len(row) < 2:
                 continue
             try:
-                freqs.append(float(row[0]))
-                dbs.append(float(row[1]))
+                frequency, level = float(row[0]), float(row[1])
+                if not math.isfinite(frequency) or not math.isfinite(level):
+                    raise ValueError("non-finite value")
+                freqs.append(frequency)
+                dbs.append(level)
             except ValueError:
-                pass
+                skipped_rows += 1
+
+    if skipped_rows:
+        logger.warning("Skipped %d malformed row(s) while loading FR CSV %s", skipped_rows, path)
 
     freq = np.array(freqs, dtype=float)
     db = np.array(dbs, dtype=float)

@@ -17,6 +17,7 @@ import hashlib
 from pathlib import Path
 import tempfile
 import threading
+import time
 
 import numpy as np
 
@@ -28,6 +29,7 @@ LOCK_FILE = HERE / "embeddings_cache.lock"
 MODEL_NAME = "gemini-embedding-001"
 EMBEDDING_DIMENSION = 384
 MAX_CACHE_ENTRIES = 2_000
+REMOTE_EMBED_RETRIES = 3
 
 _cache: OrderedDict[str, list[float]] | None = None
 _cache_lock = threading.RLock()
@@ -109,11 +111,23 @@ def _embed_remote(texts: list[str]) -> list[list[float]]:
     if not api_key or api_key.lower().startswith(("your_", "placeholder_")):
         raise RuntimeError("GEMINI_API_KEY is required to generate embeddings.")
     client = genai.Client(api_key=api_key)
-    response = client.models.embed_content(
-        model=MODEL_NAME,
-        contents=texts,
-        config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSION),
-    )
+    for attempt in range(REMOTE_EMBED_RETRIES):
+        try:
+            response = client.models.embed_content(
+                model=MODEL_NAME,
+                contents=texts,
+                config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSION),
+            )
+            break
+        except Exception as exc:
+            if attempt == REMOTE_EMBED_RETRIES - 1:
+                raise
+            delay = 0.25 * (2 ** attempt)
+            logger.warning(
+                "Gemini embedding attempt %d/%d failed; retrying in %.2fs: %s",
+                attempt + 1, REMOTE_EMBED_RETRIES, delay, exc,
+            )
+            time.sleep(delay)
     vectors = [list(embedding.values) for embedding in response.embeddings]
     if len(vectors) != len(texts) or any(len(vector) != EMBEDDING_DIMENSION for vector in vectors):
         raise RuntimeError("Gemini returned embeddings with an unexpected shape.")
@@ -158,10 +172,19 @@ def embed_texts(texts: list[str]) -> np.ndarray:
                 missing_indices.append(index)
 
     if missing:
-        new_vectors = _embed_remote(missing)
-        new_entries = dict(zip(missing, new_vectors))
+        try:
+            new_vectors = _embed_remote(missing)
+        except Exception as exc:
+            # Keep ranking available during a transient remote outage. Do not
+            # persist fallback vectors; a later healthy request can refresh them.
+            logger.warning("Gemini embeddings unavailable; using local fallback: %s", exc)
+            new_vectors = _offline_embeddings(missing).tolist()
+            new_entries = {}
+        else:
+            new_entries = dict(zip(missing, new_vectors))
         for index, vector in zip(missing_indices, new_vectors):
             result[index] = vector
-        _merge_and_save(new_entries)
+        if new_entries:
+            _merge_and_save(new_entries)
 
     return np.asarray(result, dtype=float)

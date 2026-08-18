@@ -12,6 +12,7 @@ import time
 from collections import OrderedDict, deque
 from threading import Lock
 from fastapi import FastAPI, Query, HTTPException, Response, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .features import to_vector
@@ -133,6 +134,26 @@ def health_check():
     }
 
 
+@app.get("/ready")
+def readiness_check():
+    """Verify the active data source rather than only reporting its config."""
+    from .db import get_client, is_supabase_configured
+
+    if not is_supabase_configured():
+        ready = bool(data_manager.iems and data_manager.corpus_vectors is not None)
+        detail = "local corpus is loaded" if ready else "local corpus is unavailable"
+    else:
+        try:
+            get_client().table("iems").select("name").limit(1).execute()
+            ready, detail = True, "Supabase is reachable"
+        except Exception as exc:
+            logger.warning("Readiness check could not reach Supabase: %s", exc)
+            ready, detail = False, "Supabase is unreachable"
+
+    payload = {"status": "ready" if ready else "unavailable", "detail": detail}
+    return payload if ready else JSONResponse(status_code=503, content=payload)
+
+
 # ---------------------------------------------------------------------------
 # /search
 # ---------------------------------------------------------------------------
@@ -144,7 +165,7 @@ def search_api(
     alpha: float = Query(0.5, ge=0.0, le=1.0),
     top_k: int = Query(6, ge=1, le=50),
     price_tier: str = Query("all"),
-    exact_features: str = Query(None),
+    exact_features: str = Query(None, max_length=10_000),
 ):
     response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
     import json

@@ -173,6 +173,10 @@ class TestSearchEndpoint:
         # Server should return 500 or a JSON error — not crash silently
         assert res.status_code in (400, 422, 500)
 
+    def test_oversized_exact_features_is_rejected(self, client):
+        res = client.get("/search", params={"exact_features": "x" * 10_001})
+        assert res.status_code == 422
+
 
 # ---------------------------------------------------------------------------
 # GET /iem/{name}
@@ -206,6 +210,40 @@ class TestIemEndpoint:
         data = res.json()
         assert isinstance(data.get("similar"), list)
 
+    def test_configured_supabase_iem_path(self, client, monkeypatch):
+        """Exercise the live repository branch instead of only local fallback."""
+        from backend import db
+
+        record = {
+            "name": "Measured IEM", "description": "A measured profile.",
+            "features": MOCK_FEATURES, "embedding": [0.0] * 384,
+        }
+
+        class Response:
+            data = [record]
+
+        class Query:
+            def select(self, _fields):
+                return self
+
+            def eq(self, _field, _value):
+                return self
+
+            def execute(self):
+                return Response()
+
+        class FakeClient:
+            def table(self, _name):
+                return Query()
+
+        monkeypatch.setattr(db, "is_supabase_configured", lambda: True)
+        monkeypatch.setattr(db, "get_client", lambda: FakeClient())
+        monkeypatch.setattr(db, "search_iems", lambda *_args, **_kwargs: [record])
+
+        res = client.get("/iem/Measured%20IEM")
+        assert res.status_code == 200
+        assert res.json()["iem"]["name"] == "Measured IEM"
+
 
 # ---------------------------------------------------------------------------
 # GET /health
@@ -224,3 +262,8 @@ class TestHealthEndpoint:
         res = client.get("/api/health")
         assert res.status_code == 200
         assert res.json()["status"] == "ok"
+
+    def test_ready_checks_local_corpus(self, client):
+        res = client.get("/ready")
+        assert res.status_code == 200
+        assert res.json()["status"] == "ready"

@@ -4,6 +4,8 @@ db.py
 Handles connections and operations with the Supabase pgvector backend.
 """
 
+from functools import lru_cache
+
 from supabase import create_client, Client
 import numpy as np
 from .config import settings
@@ -11,7 +13,9 @@ from .config import settings
 def is_supabase_configured() -> bool:
     return settings.is_supabase_configured
 
+@lru_cache(maxsize=1)
 def get_client() -> Client:
+    """Return the process-wide Supabase client and reuse its HTTP transport."""
     if not is_supabase_configured():
         raise ValueError("SUPABASE_URL and SUPABASE_KEY are not validly configured in .env.")
     return create_client(settings.supabase_url, settings.supabase_key)

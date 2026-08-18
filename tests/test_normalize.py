@@ -80,6 +80,13 @@ class TestLoadFrCsv:
         curve = load_fr_csv(str(csv_path))
         assert len(curve.freq) == 2
 
+    def test_logs_malformed_row_count(self, tmp_path, caplog):
+        csv_path = tmp_path / "bad.csv"
+        csv_path.write_text("100,5\nnot-a-number,2\n200,nan\n")
+        curve = load_fr_csv(str(csv_path))
+        assert len(curve.freq) == 1
+        assert "Skipped 2 malformed row(s)" in caplog.text
+
     def test_unsorted_input_is_sorted(self, tmp_path):
         csv_path = tmp_path / "unsorted.csv"
         write_csv(str(csv_path), [(1000, 0), (200, 1), (50, -2)])

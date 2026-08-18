@@ -15,6 +15,17 @@ logger = logging.getLogger(__name__)
 
 # Price threshold (USD) separating "cheaper" from "costlier" tiers.
 PRICE_TIER_THRESHOLD = 500
+SEMANTIC_CANDIDATE_POOL_MIN = 100
+SEMANTIC_CANDIDATE_POOL_MAX = 1_000
+
+
+def _semantic_candidate_pool_size(semantic_weight: float) -> int:
+    """Widen semantic pre-filtering as the final rank becomes acoustic-heavy."""
+    weight = min(1.0, max(0.0, float(semantic_weight)))
+    return max(
+        SEMANTIC_CANDIDATE_POOL_MIN,
+        int(SEMANTIC_CANDIDATE_POOL_MAX * (1.0 - weight)),
+    )
 
 
 class SearchRepositoryUnavailable(RuntimeError):
@@ -65,7 +76,11 @@ def fetch_search_candidates(q: str, semantic_weight: float = 0.5):
                 db_results = list_iems(client)
             else:
                 query_emb = embed_texts([q])[0]
-                db_results = search_iems(client, query_emb, top_k=100)
+                db_results = search_iems(
+                    client,
+                    query_emb,
+                    top_k=_semantic_candidate_pool_size(semantic_weight),
+                )
 
             if db_results:
                 candidates = _records_to_candidates(db_results)

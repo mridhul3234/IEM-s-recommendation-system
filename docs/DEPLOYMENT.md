@@ -44,6 +44,8 @@ Configure the following secrets in **GitHub Repo Settings -> Secrets and variabl
 - **Build Command**: `pip install -r requirements.txt`
 - **Start Command**: `python -m uvicorn backend.server:app --host 0.0.0.0 --port $PORT`
 - **Health Check Path**: `/health` (Zero-downtime rolling cutover waits for HTTP 200 `{"status": "ok"}`).
+- **Readiness Check Path**: `/ready` verifies the active corpus or makes a small authenticated Supabase query. Use it for alerting; `/health` stays lightweight for platform liveness probes.
+- **Worker scaling prerequisite**: the rate limiter and profile cache are process-local. Before adding Uvicorn workers or horizontal replicas, move rate limiting and shared cache coordination to Redis (or an equivalent shared service), then load-test Gemini and Supabase concurrency limits. The checked-in Render service stays single-worker until that is in place.
 
 ### Frontend (Astro Static Site) — e.g., Cloudflare Pages / Vercel / Netlify
 - **Framework Preset**: Astro
