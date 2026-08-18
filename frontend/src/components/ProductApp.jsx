@@ -21,7 +21,7 @@ export default function ProductApp() {
 
     const fetchIem = async () => {
       try {
-        const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
+        const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'https://iem-s-recommendation-system-nudd.vercel.app';
         const res = await fetch(`${apiBase}/iem/${encodeURIComponent(name)}`);
         if (!res.ok) throw new Error('Failed to fetch IEM details');
         const data = await res.json();

@@ -24,7 +24,7 @@ export default function CompareApp() {
 
     const fetchIems = async () => {
       try {
-        const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
+        const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'https://iem-s-recommendation-system-nudd.vercel.app';
         const fetched = [];
         for (const name of names) {
           const res = await fetch(`${apiBase}/iem/${encodeURIComponent(name)}`);

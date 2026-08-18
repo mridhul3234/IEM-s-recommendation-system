@@ -178,7 +178,7 @@ export default function SearchApp() {
 
     try {
       const ts = Date.now();
-      const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
+      const apiBase = import.meta.env.PUBLIC_API_BASE_URL || 'https://iem-s-recommendation-system-nudd.vercel.app';
       let url = `${apiBase}/search?top_k=${targetTopK}&price_tier=${selectedPriceTier}&_t=${ts}`;
       if (isEqMode) {
         url += `&q=${encodeURIComponent(q || "")}&exact_features=${encodeURIComponent(JSON.stringify(exactFeatures))}`;
@@ -215,7 +215,7 @@ export default function SearchApp() {
       if (err.name === 'AbortError') return;
       const isNetworkErr = err.message?.toLowerCase().includes('failed to fetch');
       const displayErr = isNetworkErr
-        ? `Unable to connect to search API at ${import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000'}. Please verify python server.py is running on port 8000.`
+        ? `Unable to connect to search API at ${import.meta.env.PUBLIC_API_BASE_URL || 'https://iem-s-recommendation-system-nudd.vercel.app'}. Please verify backend server status.`
         : err.message;
       setError(displayErr);
     } finally {
