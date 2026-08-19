@@ -187,7 +187,18 @@ export default function SearchApp() {
         url += `&q=${encodeURIComponent(q)}`;
       }
       const res = await fetch(url, { signal: currentController.signal });
-      if (!res.ok) throw new Error('Search failed');
+      if (!res.ok) {
+        let detail = `Search failed with status ${res.status}`;
+        try {
+          const errData = await res.json();
+          if (errData.detail) {
+            detail = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+          } else if (errData.error) {
+            detail = errData.error;
+          }
+        } catch (_) {}
+        throw new Error(detail);
+      }
       const data = await res.json();
       
       setResults(data.results);

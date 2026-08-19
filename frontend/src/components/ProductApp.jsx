@@ -24,7 +24,14 @@ export default function ProductApp() {
       try {
         const apiBase = getApiBaseUrl();
         const res = await fetch(`${apiBase}/iem/${encodeURIComponent(name)}`);
-        if (!res.ok) throw new Error('Failed to fetch IEM details');
+        if (!res.ok) {
+          let detail = `Failed to fetch IEM details (HTTP ${res.status})`;
+          try {
+            const errData = await res.json();
+            if (errData.detail) detail = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+          } catch (_) {}
+          throw new Error(detail);
+        }
         const data = await res.json();
         
         if (data.error) throw new Error(data.error);
