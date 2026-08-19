@@ -68,8 +68,11 @@ class Settings(NamedTuple):
 
 
 def load_settings() -> Settings:
-    origins_raw = os.environ.get("ALLOWED_ORIGINS", "http://localhost:4321,http://localhost:3000")
-    origins = [o.strip() for o in origins_raw.split(",") if o.strip()]
+    origins_raw = os.environ.get(
+        "ALLOWED_ORIGINS",
+        "http://localhost:4321,http://localhost:3000,https://iem-s-recommendation-system-nudd.vercel.app",
+    )
+    origins = [o.strip().rstrip("/") for o in origins_raw.split(",") if o.strip()]
 
     try:
         port = int(os.environ.get("BACKEND_PORT", "8000"))
@@ -129,3 +132,4 @@ def validate_config(s: Settings = settings) -> None:
             logger.warning("GEMINI_API_KEY not configured — using offline fallback target profile.")
         if not s.is_supabase_configured:
             logger.info("Supabase credentials not configured — using local dataset.")
+

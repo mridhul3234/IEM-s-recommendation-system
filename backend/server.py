@@ -69,8 +69,11 @@ app.add_middleware(
 async def security_and_rate_limit_middleware(request: Request, call_next):
     if request.method != "OPTIONS" and request.url.path == "/search":
         origin = request.headers.get("origin")
-        if origin and origin not in _ALLOWED_ORIGINS:
-            return Response(content='{"detail":"Origin is not allowed"}', status_code=403, media_type="application/json")
+        if origin:
+            clean_origin = origin.rstrip("/")
+            if clean_origin not in _ALLOWED_ORIGINS and "*" not in _ALLOWED_ORIGINS:
+                logger.warning("CORS rejected origin '%s'. Configured ALLOWED_ORIGINS: %s", origin, _ALLOWED_ORIGINS)
+                return Response(content='{"detail":"Origin is not allowed"}', status_code=403, media_type="application/json")
 
     # Bounded per-process rate limiting. Deploy an edge limiter too when
     # running multiple workers, because memory is not shared between them.
