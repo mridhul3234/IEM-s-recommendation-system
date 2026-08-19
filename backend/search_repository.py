@@ -34,24 +34,35 @@ class SearchRepositoryUnavailable(RuntimeError):
 
 def _records_to_candidates(records: list[dict]) -> tuple[list, list, np.ndarray, np.ndarray]:
     """Convert complete, valid database records into ranking inputs."""
+    from .db import parse_embedding
+
     iems_data: list[tuple[str, dict]] = []
     descriptions: list[str] = []
     vectors: list[np.ndarray] = []
-    embeddings: list[np.ndarray] = []
+    parsed_embeddings: list[np.ndarray | None] = []
+
     for record in records:
         try:
             features = record["features"]
-            embedding = np.asarray(record["embedding"], dtype=float)
-            if embedding.ndim != 1 or not np.all(np.isfinite(embedding)):
-                raise ValueError("invalid embedding")
             vectors.append(to_vector(features))
         except (KeyError, TypeError, ValueError) as exc:
             logger.warning("Skipping invalid Supabase IEM record %r: %s", record.get("name"), exc)
             continue
+
         iems_data.append((record["name"], features))
         descriptions.append(str(record.get("description") or ""))
-        embeddings.append(embedding)
-    return iems_data, descriptions, np.asarray(vectors), np.asarray(embeddings)
+        parsed_embeddings.append(parse_embedding(record.get("embedding")))
+
+    if not iems_data:
+        return [], [], np.empty((0, 10)), np.empty((0, 384))
+
+    if all(emb is not None for emb in parsed_embeddings):
+        corpus_embeddings = np.asarray(parsed_embeddings, dtype=float)
+    else:
+        corpus_embeddings = embed_texts(descriptions)
+
+    return iems_data, descriptions, np.asarray(vectors), np.asarray(corpus_embeddings)
+
 
 
 def fetch_search_candidates(q: str, semantic_weight: float = 0.5):

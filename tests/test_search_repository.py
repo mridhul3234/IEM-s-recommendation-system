@@ -90,3 +90,46 @@ def test_list_iems_fetches_every_page():
             return Query()
 
     assert [record["name"] for record in list_iems(Client(), page_size=2)] == ["A", "B", "C"]
+
+
+def test_parse_embedding():
+    import json
+    from backend.db import parse_embedding
+
+    # Valid float list
+    arr = parse_embedding([0.1, 0.2, 0.3])
+    assert arr is not None and np.allclose(arr, [0.1, 0.2, 0.3])
+
+    # Valid string-serialized JSON vector
+    arr_str = parse_embedding(json.dumps([0.5, 0.6, 0.7]))
+    assert arr_str is not None and np.allclose(arr_str, [0.5, 0.6, 0.7])
+
+    # Missing / None
+    assert parse_embedding(None) is None
+
+    # Malformed string
+    assert parse_embedding("invalid json") is None
+
+    # Empty array
+    assert parse_embedding([]) is None
+
+
+def test_records_to_candidates_handles_string_and_missing_embeddings(monkeypatch):
+    import json
+    from backend import search_repository
+
+    monkeypatch.setattr(search_repository, "embed_texts", lambda descs: np.ones((len(descs), 384)))
+
+    rec_string = _record("String IEM")
+    rec_string["embedding"] = json.dumps([0.1] * 384)
+
+    rec_missing = _record("RPC IEM")
+    del rec_missing["embedding"]
+
+    iems, descs, vecs, embs = search_repository._records_to_candidates([rec_string, rec_missing])
+
+    assert len(iems) == 2
+    assert iems[0][0] == "String IEM"
+    assert iems[1][0] == "RPC IEM"
+    assert embs.shape == (2, 384)
+

@@ -4,11 +4,36 @@ db.py
 Handles connections and operations with the Supabase pgvector backend.
 """
 
+import json
+from typing import Any
 from functools import lru_cache
 
 from supabase import create_client, Client
 import numpy as np
 from .config import settings
+
+def parse_embedding(emb_val: Any) -> np.ndarray | None:
+    """Parse an embedding value into a 1D float numpy array.
+
+    Handles lists, tuples, numpy arrays, and JSON strings (such as pgvector output from Supabase).
+    Returns None if the value cannot be parsed into a finite 1D array.
+    """
+    if emb_val is None:
+        return None
+    if isinstance(emb_val, str):
+        try:
+            emb_val = json.loads(emb_val)
+        except (json.JSONDecodeError, TypeError):
+            return None
+    if isinstance(emb_val, (list, tuple, np.ndarray)):
+        try:
+            arr = np.asarray(emb_val, dtype=float)
+            if arr.ndim == 1 and len(arr) > 0 and np.all(np.isfinite(arr)):
+                return arr
+        except (ValueError, TypeError):
+            return None
+    return None
+
 
 def is_supabase_configured() -> bool:
     return settings.is_supabase_configured

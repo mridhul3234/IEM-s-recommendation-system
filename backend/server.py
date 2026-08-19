@@ -256,7 +256,7 @@ def get_iem_api(name: str, response: Response):
         return _get_iem_local(name)
 
     try:
-        from .db import get_client, search_iems
+        from .db import get_client, search_iems, parse_embedding
         client = get_client()
 
         res = client.table("iems").select("*").eq("name", name).execute()
@@ -265,10 +265,11 @@ def get_iem_api(name: str, response: Response):
 
         iem_data = res.data[0]
 
-        embedding = iem_data.get("embedding")
+        embedding = parse_embedding(iem_data.get("embedding"))
         similar_items = []
-        if embedding:
-            db_results = search_iems(client, np.array(embedding), top_k=6)
+        if embedding is not None:
+            db_results = search_iems(client, embedding, top_k=6)
+
             for sr in db_results:
                 if sr["name"] != name:
                     similar_items.append({

@@ -109,27 +109,39 @@ def _embed_remote(texts: list[str]) -> list[list[float]]:
     if not api_key or api_key.lower().startswith(("your_", "placeholder_")):
         raise RuntimeError("GEMINI_API_KEY is required to generate embeddings.")
     client = genai.Client(api_key=api_key)
-    for attempt in range(REMOTE_EMBED_RETRIES):
-        try:
-            response = client.models.embed_content(
-                model=MODEL_NAME,
-                contents=texts,
-                config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSION),
-            )
-            break
-        except Exception as exc:
-            if attempt == REMOTE_EMBED_RETRIES - 1:
-                raise
-            delay = 0.25 * (2 ** attempt)
-            logger.warning(
-                "Gemini embedding attempt %d/%d failed; retrying in %.2fs: %s",
-                attempt + 1, REMOTE_EMBED_RETRIES, delay, exc,
-            )
-            time.sleep(delay)
-    vectors = [list(embedding.values) for embedding in response.embeddings]
-    if len(vectors) != len(texts) or any(len(vector) != EMBEDDING_DIMENSION for vector in vectors):
-        raise RuntimeError("Gemini returned embeddings with an unexpected shape.")
-    return vectors
+
+    all_vectors: list[list[float]] = []
+    batch_size = 100
+
+    for i in range(0, len(texts), batch_size):
+        chunk = texts[i : i + batch_size]
+        response = None
+        for attempt in range(REMOTE_EMBED_RETRIES):
+            try:
+                response = client.models.embed_content(
+                    model=MODEL_NAME,
+                    contents=chunk,
+                    config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSION),
+                )
+                break
+            except Exception as exc:
+                if attempt == REMOTE_EMBED_RETRIES - 1:
+                    raise
+                delay = 0.25 * (2 ** attempt)
+                logger.warning(
+                    "Gemini embedding attempt %d/%d failed; retrying in %.2fs: %s",
+                    attempt + 1, REMOTE_EMBED_RETRIES, delay, exc,
+                )
+                time.sleep(delay)
+        if response is None or not hasattr(response, "embeddings"):
+            raise RuntimeError("Gemini returned no embeddings.")
+        vectors = [list(embedding.values) for embedding in response.embeddings]
+        if len(vectors) != len(chunk) or any(len(vector) != EMBEDDING_DIMENSION for vector in vectors):
+            raise RuntimeError("Gemini returned embeddings with an unexpected shape.")
+        all_vectors.extend(vectors)
+
+    return all_vectors
+
 
 
 def _offline_embeddings(texts: list[str]) -> np.ndarray:
