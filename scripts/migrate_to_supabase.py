@@ -49,6 +49,9 @@ def load_verified_prices(path: str | None) -> dict[str, dict]:
     return prices
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
     if settings.is_production and "--confirm-production" not in sys.argv:
         print("⚠️ WARNING: You are attempting to run migrations against a PRODUCTION environment!")
         print("To proceed, re-run with the flag: python migrate_to_supabase.py --confirm-production")

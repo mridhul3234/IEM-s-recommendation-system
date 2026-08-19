@@ -70,8 +70,6 @@ def _file_lock():
         if os.name == "nt":
             import msvcrt
             lock_handle.seek(0)
-            lock_handle.write("0")
-            lock_handle.flush()
             msvcrt.locking(lock_handle.fileno(), msvcrt.LK_LOCK, 1)
         else:
             import fcntl
