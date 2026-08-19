@@ -214,9 +214,11 @@ export default function SearchApp() {
       }
     } catch (err) {
       if (err.name === 'AbortError') return;
+      let targetUrl = 'Not Configured';
+      try { targetUrl = getApiBaseUrl(); } catch (e) {}
       const isNetworkErr = err.message?.toLowerCase().includes('failed to fetch');
       const displayErr = isNetworkErr
-        ? 'Unable to connect to the search API. Please verify the Render backend status.'
+        ? `Unable to connect to search API at "${targetUrl}". Check browser console (F12) for CORS or Mixed Content errors, or verify Render status.`
         : err.message;
       setError(displayErr);
     } finally {
